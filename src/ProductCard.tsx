@@ -1,7 +1,6 @@
 import { useState } from "react";
 import ProductModal from "./ProductModal";
 
-
 const ProductCard = ({ product }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -12,7 +11,7 @@ const ProductCard = ({ product }) => {
     <>
       <div
         // className="p-4 border rounded-lg shadow hover:shadow-md transition cursor-pointer"
-        className="bg-white shadow-md rounded-xl p-4 text-center text-lg font-semibold border border-gray-200"
+        className="bg-white shadow-md rounded-xl p-4 text-center text-lg font-semibold border border-gray-200 cursor-pointer"
         onClick={openModal}
       >
         <h3 className="text-lg font-semibold">{product.상품코드}</h3>

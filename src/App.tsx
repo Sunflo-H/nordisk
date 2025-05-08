@@ -3,6 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import ProductCard from "./ProductCard";
+import ExcelReader from "./ExcelReader";
 type ProductRow = {
   상품코드: string;
   상품명: string;
@@ -91,16 +92,19 @@ function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="grid grid-cols-2 gap-3 p-4">
-      <ProductCard product={product1} />
-      <ProductCard product={product2} />
-      <ProductCard product={product1} />
-      <ProductCard product={product2} />
-      <ProductCard product={product1} />
-      <ProductCard product={product2} />
-      <ProductCard product={product1} />
-      <ProductCard product={product2} />
-    </div>
+    <>
+      <ExcelReader />
+      <div className="grid grid-cols-2 gap-3 p-4">
+        <ProductCard product={product1} />
+        <ProductCard product={product2} />
+        <ProductCard product={product1} />
+        <ProductCard product={product2} />
+        <ProductCard product={product1} />
+        <ProductCard product={product2} />
+        <ProductCard product={product1} />
+        <ProductCard product={product2} />
+      </div>
+    </>
   );
 }
 
