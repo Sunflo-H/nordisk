@@ -31,10 +31,38 @@ type ProductRow = {
     "19": number;
   };
 };
-const product: ProductRow = {
+const product1: ProductRow = {
   상품코드: "NDK-GRN-001",
   상품명: "Green Puffer Jacket",
   칼라: "E1",
+  수량: 6,
+  재고: {
+    "00": 0,
+    "01": 0,
+    "02": 1,
+    "03": 1,
+    "04": 1,
+    "05": 1,
+    "06": 1,
+    "07": 0,
+    "08": 1,
+    "09": 0,
+    "10": 0,
+    "11": 0,
+    "12": 0,
+    "13": 0,
+    "14": 0,
+    "15": 0,
+    "16": 0,
+    "17": 0,
+    "18": 0,
+    "19": 0,
+  },
+};
+const product2: ProductRow = {
+  상품코드: "NDK-GRN-002",
+  상품명: "Red Puffer Jacket",
+  칼라: "R1",
   수량: 6,
   재고: {
     "00": 0,
@@ -63,9 +91,16 @@ function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <>
-      <ProductCard product={product} />
-    </>
+    <div className="grid grid-cols-2 gap-3 p-4">
+      <ProductCard product={product1} />
+      <ProductCard product={product2} />
+      <ProductCard product={product1} />
+      <ProductCard product={product2} />
+      <ProductCard product={product1} />
+      <ProductCard product={product2} />
+      <ProductCard product={product1} />
+      <ProductCard product={product2} />
+    </div>
   );
 }
 
