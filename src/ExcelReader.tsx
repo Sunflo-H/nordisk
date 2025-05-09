@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
+import fs_config_app from "./firebase/firebaseConfig";
 import { child, get, getDatabase, ref, set } from "firebase/database";
-import { initializeApp } from "firebase/app";
+
+// Initialize Firebase
+const app = fs_config_app;
 
 const columnOrder = [
   "상품코드",
@@ -29,20 +32,6 @@ const columnOrder = [
   "18",
   "19",
 ];
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBbkCm8B70Qi2aPMuL-YKZEZc7_ieAqwH0",
-  authDomain: "nordisk-management.firebaseapp.com",
-  projectId: "nordisk-management",
-  storageBucket: "nordisk-management.firebasestorage.app",
-  messagingSenderId: "601807263512",
-  appId: "1:601807263512:web:1ae00c6b549c67fe8c706d",
-  measurementId: "G-C7R3BKE0LD",
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase();
 
 function writeExcelData(excelData) {
   excelData.forEach((data) => {
@@ -79,6 +68,7 @@ function writeExcelData(excelData) {
 
 const dbRef = ref(db);
 
+// 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장
 const ExcelReader = () => {
   const [productsData, setProductsData] = useState([]);
   const [blinkedRow, setBlinkedRow] = useState(null);
@@ -100,10 +90,10 @@ const ExcelReader = () => {
     reader.readAsBinaryString(file);
   };
 
-  const handleRowClick = (index) => {
-    setBlinkedRow(index);
-    setTimeout(() => setBlinkedRow(null), 60000); // 0.6초 뒤 초기화
-  };
+  // const handleRowClick = (index) => {
+  //   setBlinkedRow(index);
+  //   setTimeout(() => setBlinkedRow(null), 60000); // 0.6초 뒤 초기화
+  // };
 
   function readData() {
     get(child(dbRef, `product`))
@@ -132,7 +122,7 @@ const ExcelReader = () => {
 
   return (
     <div>
-      <h1 class="text-3xl font-bold underline">Hello world!</h1>
+      {/* <h1 class="text-3xl font-bold underline">Hello world!</h1>
       <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
       <table border="1">
         <thead>
@@ -143,23 +133,23 @@ const ExcelReader = () => {
           </tr>
         </thead>
         <tbody>
-          {productsData.map((row, i) => (
+          {productsData.map((productData, i) => (
             <tr
               key={i}
-              onClick={() => handleRowClick(i)}
+              // onClick={() => handleRowClick(i)}
               className={blinkedRow === i ? "blink-row" : ""}
               style={{ cursor: "pointer" }}
             >
               {columnOrder.map((key) => (
-                <td key={key}>{row[key] ?? ""}</td>
+                <td key={key}>{productData.재고[key] ?? ""}</td>
               ))}
             </tr>
           ))}
         </tbody>
-      </table>
+      </table> */}
 
-      <div onClick={() => writeExcelData()}>쓰기</div>
-      <div onClick={readData}>읽기</div>
+      <div onClick={() => writeExcelData()}>데이터 덮어쓰기</div>
+      {/* <div onClick={readData}>읽기</div> */}
     </div>
   );
 };
