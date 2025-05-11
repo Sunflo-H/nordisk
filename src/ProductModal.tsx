@@ -1,6 +1,13 @@
+import { useState } from "react";
+import ProductDetailModal from "./ProductDetailModal";
+
 const ProductModal = ({ product, onClose }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => setIsOpen(false);
   let 사이즈별재고 = Object.keys(product.재고).sort();
-  console.log(사이즈별재고);
+  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white p-6 rounded-lg w-[90%] max-w-[600px] overflow-auto max-h-[90vh]">
@@ -21,13 +28,15 @@ const ProductModal = ({ product, onClose }) => {
             </thead>
             <tbody>
               {사이즈별재고.map((value, i) => (
-                <tr key={i}>
+                <tr key={i} onClick={openModal}>
                   <td className="px-4 py-2">{value}</td>
                   <td className="px-4 py-2">{product.재고[value]}</td>
+
                 </tr>
               ))}
             </tbody>
           </table>
+              {isOpen && <ProductDetailModal product={product} onClose={closeModal} />}
         </div>
       </div>
     </div>
