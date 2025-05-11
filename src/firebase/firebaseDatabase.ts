@@ -36,7 +36,7 @@ function writeExcelData(excelData) {
   });
 }
 
-function readData() {
+function readData(setProductsData) {
   get(child(dbRef, `product`))
     .then((snapshot) => {
       if (snapshot.exists()) {

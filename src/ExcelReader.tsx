@@ -61,9 +61,9 @@ const ExcelReader = () => {
   //   setTimeout(() => setBlinkedRow(null), 60000); // 0.6초 뒤 초기화
   // };
 
-  useEffect(() => {
-    readData();
-  }, []);
+  // useEffect(() => {
+  //   readData();
+  // }, []);
 
   return (
     <div>

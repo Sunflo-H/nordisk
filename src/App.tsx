@@ -1,9 +1,9 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useEffect, useState } from "react";
 import "./App.css";
 import ProductCard from "./ProductCard";
 import ExcelReader from "./ExcelReader";
+import { readData } from "./firebase/firebaseDatabase";
+
 type ProductRow = {
   상품코드: string;
   상품명: string;
@@ -88,21 +88,19 @@ const product2: ProductRow = {
     "19": 0,
   },
 };
-function App() {
-  const [count, setCount] = useState(0);
 
+function App() {
+  const [productsData, setProductsData] = useState([]);
+  useEffect(() => {
+    readData(setProductsData);
+  }, []);
   return (
     <>
       <ExcelReader />
       <div className="grid grid-cols-2 gap-3 p-4">
-        <ProductCard product={product1} />
-        <ProductCard product={product2} />
-        <ProductCard product={product1} />
-        <ProductCard product={product2} />
-        <ProductCard product={product1} />
-        <ProductCard product={product2} />
-        <ProductCard product={product1} />
-        <ProductCard product={product2} />
+        {productsData.map((product) => (
+          <ProductCard product={product} key={product.상품코드} />
+        ))}
       </div>
     </>
   );
