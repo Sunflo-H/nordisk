@@ -6,7 +6,6 @@ const ProductModal = ({ product, onClose }) => {
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
   let 사이즈별재고 = Object.keys(product.재고).sort();
-  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -22,21 +21,24 @@ const ProductModal = ({ product, onClose }) => {
           <table className="min-w-full table-auto text-sm">
             <thead>
               <tr className="bg-gray-100 text-left">
-                <th className="px-4 py-2">사이즈</th>
-                <th className="px-4 py-2">수량</th>
+                <th className="px-4 py-2 text-center">사이즈</th>
+                <th className="px-4 py-2 text-center">수량</th>
               </tr>
             </thead>
             <tbody>
               {사이즈별재고.map((value, i) => (
                 <tr key={i} onClick={openModal}>
-                  <td className="px-4 py-2">{value}</td>
-                  <td className="px-4 py-2">{product.재고[value]}</td>
-
+                  <td className="px-4 py-2 text-center">{value}</td>
+                  <td className="px-4 py-2 text-center">
+                    {product.재고[value]}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-              {isOpen && <ProductDetailModal product={product} onClose={closeModal} />}
+          {isOpen && (
+            <ProductDetailModal product={product} onClose={closeModal} />
+          )}
         </div>
       </div>
     </div>
