@@ -25,7 +25,7 @@ const ProductModal = ({ product, onClose }) => {
   const handleIncreae = (num) => {};
 
   const handleUpdate = (num) => {
-    console.log(num);
+    // console.log(num);
   };
 
   return (
