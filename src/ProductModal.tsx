@@ -5,9 +5,6 @@ const ProductModal = ({ product, onClose }) => {
   const [showAllSizes, setShowAllSizes] = useState(false);
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
   const [tempProductsData, setTempProductsData] = useState({});
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
-  // const openModal = () => setIsOpen(true);
-  // const closeModal = () => setIsOpen(false);
 
   let sortedSize = Object.keys(product.재고).sort();
 
@@ -21,13 +18,13 @@ const ProductModal = ({ product, onClose }) => {
       : setSelectedRowIndex(index);
   };
 
-  // const handleDecreae = (num) => {
-  //   // e.stopPropagation();
-  // }
+  const handleDecreae = (index) => {
+    console.log(product);
+  };
 
-  // const handleIncreae = (num) => {
-  //   e.stopPropagation();
-  // }
+  const handleIncreae = (num) => {};
+
+  const handleUpdate = () => {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -40,6 +37,7 @@ const ProductModal = ({ product, onClose }) => {
           >
             {showAllSizes ? "모든 사이즈 보기" : "필요 사이즈만 보기"}
           </div>
+          <div>저장</div>
           <button onClick={onClose} className="text-gray-500 hover:text-black">
             ✕
           </button>
@@ -67,7 +65,10 @@ const ProductModal = ({ product, onClose }) => {
                   <td className="px-4 py-2 text-center">{value}</td>
                   <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
                     <div
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        handleDecreae(i);
+                        e.stopPropagation();
+                      }}
                       className={`${
                         selectedRowIndex === i
                           ? "absolute top-1/2 left-10 -translate-y-1/2 flex items-center justify-center text-xl text-red-500 w-5 h-5 text-center border rounded-full"
@@ -92,9 +93,6 @@ const ProductModal = ({ product, onClose }) => {
               ))}
             </tbody>
           </table>
-          {/* {isOpen && (
-            <ProductDetailModal product={product} onClose={closeModal} />
-          )} */}
         </div>
       </div>
     </div>
