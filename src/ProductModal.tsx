@@ -19,7 +19,7 @@ const ProductModal = ({ product, onClose }) => {
       <div className="bg-white p-6 rounded-lg w-[90%] max-w-[600px] overflow-auto max-h-[90vh]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="w-40 border text-xl font-bold">{product.상품코드}</h2>
-          <div className="cursor-pointer" onClick={}>
+          <div className=" cursor-pointer" onClick={toggleActiveOption}>
             필요 사이즈만
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-black">
