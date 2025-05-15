@@ -1,26 +1,44 @@
 import { useState } from "react";
-import ProductDetailModal from "./ProductDetailModal";
 
 const ProductModal = ({ product, onClose }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isActiveOption, setIsActiveOption] = useState(true);
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
+  // const [isOpen, setIsOpen] = useState(false);
+  const [showAllSizes, setShowAllSizes] = useState(false);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+  const [tempProductsData, setTempProductsData] = useState({});
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  // const openModal = () => setIsOpen(true);
+  // const closeModal = () => setIsOpen(false);
 
-  let 사이즈별재고 = Object.keys(product.재고).sort();
-  const arr = product.재고;
-  console.log(arr);
+  let sortedSize = Object.keys(product.재고).sort();
 
-  const toggleActiveOption = () => {
-    isActiveOption ? setIsActiveOption(false) : setIsActiveOption(true);
+  const handleToggleSizeView = () => {
+    showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);
   };
+
+  const handleRowClick = (index) => {
+    selectedRowIndex === index
+      ? setSelectedRowIndex(null)
+      : setSelectedRowIndex(index);
+  };
+
+  // const handleDecreae = (num) => {
+  //   // e.stopPropagation();
+  // }
+
+  // const handleIncreae = (num) => {
+  //   e.stopPropagation();
+  // }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white p-6 rounded-lg w-[90%] max-w-[600px] overflow-auto max-h-[90vh]">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="w-40 border text-xl font-bold">{product.상품코드}</h2>
-          <div className=" cursor-pointer" onClick={toggleActiveOption}>
-            필요 사이즈만
+          <h2 className="w-40 text-xl font-bold">{product.상품코드}</h2>
+          <div
+            className={` cursor-pointer border rounded-sm px-1 py-2 `}
+            onClick={handleToggleSizeView}
+          >
+            {showAllSizes ? "모든 사이즈 보기" : "필요 사이즈만 보기"}
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-black">
             ✕
@@ -36,19 +54,47 @@ const ProductModal = ({ product, onClose }) => {
               </tr>
             </thead>
             <tbody>
-              {사이즈별재고.map((value, i) => (
-                <tr key={i} onClick={openModal}>
+              {sortedSize.map((value, i) => (
+                <tr
+                  key={i}
+                  onClick={() => {
+                    handleRowClick(i);
+                  }}
+                  className={`cursor-pointer ${
+                    selectedRowIndex === i ? "bg-orange-100 " : ""
+                  }`}
+                >
                   <td className="px-4 py-2 text-center">{value}</td>
-                  <td className="px-4 py-2 text-center">
-                    {product.재고[value]}
+                  <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className={`${
+                        selectedRowIndex === i
+                          ? "absolute top-1/2 left-10 -translate-y-1/2 flex items-center justify-center text-xl text-red-500 w-5 h-5 text-center border rounded-full"
+                          : "hidden"
+                      } `}
+                    >
+                      -
+                    </div>
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className={`${
+                        selectedRowIndex === i
+                          ? "absolute top-1/2 right-10 -translate-y-1/2 flex items-center justify-center text-xl  text-green-500 w-5 h-5 border rounded-full text-center"
+                          : "hidden"
+                      } `}
+                    >
+                      +
+                    </div>
+                    <div>{product.재고[value]}</div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {isOpen && (
+          {/* {isOpen && (
             <ProductDetailModal product={product} onClose={closeModal} />
-          )}
+          )} */}
         </div>
       </div>
     </div>
