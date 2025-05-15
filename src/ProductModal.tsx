@@ -24,7 +24,7 @@ const ProductModal = ({ product, onClose }) => {
 
   const handleIncreae = (num) => {};
 
-  const handleUpdate = () => {};
+  const handleUpdate = (num) => {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
