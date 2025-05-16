@@ -1,12 +1,17 @@
 import { useState } from "react";
+import type { ProductType, SizeKey } from "./types";
 
-const ProductModal = ({ product, onClose }) => {
-  // const [isOpen, setIsOpen] = useState(false);
+type ProductModalProps = {
+  product: ProductType;
+  onClose: () => void;
+};
+
+const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [showAllSizes, setShowAllSizes] = useState(false);
-  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [tempProductsData, setTempProductsData] = useState({});
 
-  let sortedSize = Object.keys(product.재고).sort();
+  let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
 
   const handleToggleSizeView = () => {
     showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);

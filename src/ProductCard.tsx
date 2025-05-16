@@ -9,8 +9,8 @@ type ProductCardProps = {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
+  const openModal: () => void = () => setIsOpen(true);
+  const closeModal: () => void = () => setIsOpen(false);
 
   return (
     <>
