@@ -12,19 +12,21 @@ const ProductModal = ({ product, onClose }) => {
     showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);
   };
 
-  const handleRowClick = (index) => {
+  const handleRowClick = (index: number) => {
     selectedRowIndex === index
       ? setSelectedRowIndex(null)
       : setSelectedRowIndex(index);
   };
 
-  const handleDecreae = (index) => {
+  const handleDecreae = (index: number) => {
     console.log(product);
   };
 
-  const handleIncreae = (num) => {};
+  const handleIncreae = (num: number) => {};
 
-  const handleUpdate = () => {};
+  const handleUpdate = () => {
+    // console.log(num);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
