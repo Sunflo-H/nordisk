@@ -12,19 +12,19 @@ const ProductModal = ({ product, onClose }) => {
     showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);
   };
 
-  const handleRowClick = (index) => {
+  const handleRowClick = (index: number) => {
     selectedRowIndex === index
       ? setSelectedRowIndex(null)
       : setSelectedRowIndex(index);
   };
 
-  const handleDecreae = (index) => {
+  const handleDecreae = (index: number) => {
     console.log(product);
   };
 
-  const handleIncreae = (num) => {};
+  const handleIncreae = (num: number) => {};
 
-  const handleUpdate = (num) => {
+  const handleUpdate = () => {
     // console.log(num);
   };
 
