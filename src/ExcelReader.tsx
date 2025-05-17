@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import * as XLSX from "xlsx";
 import fs_config_app from "./firebase/firebaseConfig";
-import { child, get, getDatabase, ref, set } from "firebase/database";
 import { readData, writeExcelData } from "./firebase/firebaseDatabase";
 
 // Initialize Firebase
@@ -34,10 +33,9 @@ const columnOrder = [
   "19",
 ];
 
-// 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장
+// 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelReader = () => {
   const [productsData, setProductsData] = useState([]);
-  const [blinkedRow, setBlinkedRow] = useState(null);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -55,11 +53,6 @@ const ExcelReader = () => {
 
     reader.readAsBinaryString(file);
   };
-
-  // const handleRowClick = (index) => {
-  //   setBlinkedRow(index);
-  //   setTimeout(() => setBlinkedRow(null), 60000); // 0.6초 뒤 초기화
-  // };
 
   // useEffect(() => {
   //   readData();
@@ -93,7 +86,9 @@ const ExcelReader = () => {
         </tbody>
       </table> */}
 
-      <div onClick={() => writeExcelData()}>데이터 덮어쓰기</div>
+      <div className="cursor-pointer" onClick={() => writeExcelData()}>
+        데이터 업데이트
+      </div>
       {/* <div onClick={readData}>읽기</div> */}
     </div>
   );
