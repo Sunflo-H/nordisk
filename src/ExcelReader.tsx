@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import fs_config_app from "./firebase/firebaseConfig";
 import { readData, writeExcelData } from "./firebase/firebaseDatabase";
@@ -57,12 +57,26 @@ const ExcelReader = () => {
   // useEffect(() => {
   //   readData();
   // }, []);
-
+  const fileInputRef = useRef(null);
+  const handleFileInput = () => {
+    fileInputRef.current?.click(); // input 클릭 트리거
+  };
   return (
     <div>
-      {/* <h1 class="text-3xl font-bold underline">Hello world!</h1>
-      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
-      <table border="1">
+      <input
+        type="file"
+        accept=".xlsx, .xls"
+        onChange={handleFileUpload}
+        ref={fileInputRef}
+        className="hidden"
+      />
+      <div
+        onClick={handleFileInput}
+        className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
+      >
+        엑셀 파일 업로드
+      </div>
+      {/* <table border="1">
         <thead>
           <tr>
             {columnOrder.map((key) => (
@@ -86,9 +100,9 @@ const ExcelReader = () => {
         </tbody>
       </table> */}
 
-      <div className="cursor-pointer" onClick={() => writeExcelData()}>
+      {/* <div className="cursor-pointer" onClick={() => writeExcelData()}>
         데이터 업데이트
-      </div>
+      </div> */}
       {/* <div onClick={readData}>읽기</div> */}
     </div>
   );
