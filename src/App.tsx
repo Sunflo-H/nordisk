@@ -8,9 +8,7 @@ import type { ProductType } from "./types";
 function App() {
   const [productsData, setProductsData] = useState<ProductType[]>([]);
   useEffect(() => {
-    readData((data) => {
-      setProductsData(data);
-    });
+    readData(setProductsData);
   }, []);
   return (
     <>

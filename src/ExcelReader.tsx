@@ -1,43 +1,40 @@
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
-import fs_config_app from "./firebase/firebaseConfig";
-import { readData, writeExcelData } from "./firebase/firebaseDatabase";
+import fsApp from "./firebase/firebaseConfig";
+import { writeExcelData } from "./firebase/firebaseDatabase";
 import type { ExcelDataType } from "./types";
 
-// Initialize Firebase
-const app = fs_config_app;
-
-const columnOrder = [
-  "상품코드",
-  "상품명",
-  "칼라",
-  "수량",
-  "00",
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-  "09",
-  "10",
-  "11",
-  "12",
-  "13",
-  "14",
-  "15",
-  "16",
-  "17",
-  "18",
-  "19",
-];
+// const columnOrder = [
+//   "상품코드",
+//   "상품명",
+//   "칼라",
+//   "수량",
+//   "00",
+//   "01",
+//   "02",
+//   "03",
+//   "04",
+//   "05",
+//   "06",
+//   "07",
+//   "08",
+//   "09",
+//   "10",
+//   "11",
+//   "12",
+//   "13",
+//   "14",
+//   "15",
+//   "16",
+//   "17",
+//   "18",
+//   "19",
+// ];
 
 // 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelReader = () => {
   const [productsData, setProductsData] = useState<ExcelDataType[]>([]);
-
+  console.log(productsData);
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -77,34 +74,6 @@ const ExcelReader = () => {
       >
         엑셀 파일 업로드
       </div>
-      {/* <table border="1">
-        <thead>
-          <tr>
-            {columnOrder.map((key) => (
-              <th key={key}>{key}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {productsData.map((productData, i) => (
-            <tr
-              key={i}
-              // onClick={() => handleRowClick(i)}
-              className={blinkedRow === i ? "blink-row" : ""}
-              style={{ cursor: "pointer" }}
-            >
-              {columnOrder.map((key) => (
-                <td key={key}>{productData.재고[key] ?? ""}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table> */}
-
-      {/* <div className="cursor-pointer" onClick={() => writeExcelData()}>
-        데이터 업데이트
-      </div> */}
-      {/* <div onClick={readData}>읽기</div> */}
     </div>
   );
 };

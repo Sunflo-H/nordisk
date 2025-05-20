@@ -9,7 +9,7 @@ type ProductModalProps = {
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [showAllSizes, setShowAllSizes] = useState(false);
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-  const [tempProductsData, setTempProductsData] = useState({});
+  // const [tempProductsData, setTempProductsData] = useState({});
 
   let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
 
@@ -24,12 +24,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   };
 
   const handleDecreae = (index: number) => {
+    console.log(index);
     console.log(product);
   };
 
-  const handleIncreae = (num: number) => {};
+  // const handleIncreae = (num: number) => {};
 
-  const handleUpdate = () => {};
+  // const handleUpdate = () => {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

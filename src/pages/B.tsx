@@ -1,5 +1,5 @@
-import ExcelReader from "../ExcelReader";
+// import ExcelReader from "../ExcelReader";
 
-export default function B() {
-  return <ExcelReader />;
-}
+// export default function B() {
+//   return <ExcelReader />;
+// }
