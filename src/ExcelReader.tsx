@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import fs_config_app from "./firebase/firebaseConfig";
 import { readData, writeExcelData } from "./firebase/firebaseDatabase";
+import type { ExcelDataType } from "./types";
 
 // Initialize Firebase
 const app = fs_config_app;
@@ -35,18 +36,21 @@ const columnOrder = [
 
 // 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelReader = () => {
-  const [productsData, setProductsData] = useState([]);
+  const [productsData, setProductsData] = useState<ExcelDataType[]>([]);
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     const reader = new FileReader();
 
-    reader.onload = (evt) => {
-      const binaryStr = evt.target.result;
+    reader.onload = (evt: ProgressEvent<FileReader>) => {
+      const binaryStr = evt.target?.result;
+      if (typeof binaryStr !== "string") return;
+
       const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      const jsonData = XLSX.utils.sheet_to_json(sheet) as ExcelDataType[];
       setProductsData(jsonData);
       writeExcelData(jsonData);
     };
@@ -54,10 +58,7 @@ const ExcelReader = () => {
     reader.readAsBinaryString(file);
   };
 
-  // useEffect(() => {
-  //   readData();
-  // }, []);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const handleFileInput = () => {
     fileInputRef.current?.click(); // input 클릭 트리거
   };

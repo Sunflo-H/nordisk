@@ -29,3 +29,12 @@ export type ProductType = {
     [key in SizeKey]: number;
   };
 };
+
+export type ExcelDataType = {
+  상품코드: string;
+  상품명: string;
+  칼라: string;
+  수량: number;
+} & {
+  [key in SizeKey]: number;
+};

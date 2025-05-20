@@ -1,11 +1,11 @@
 import { child, get, getDatabase, ref, set } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
-import type { ProductType } from "../types";
+import type { ExcelDataType, ProductType } from "../types";
 
 const db = getDatabase();
 const dbRef = ref(db);
 
-function writeExcelData(excelData): void {
+function writeExcelData(excelData: ExcelDataType[]): void {
   console.log(excelData);
   // excelData.forEach((data) => {
   //   set(ref(db, "product/" + data.상품코드), {
@@ -44,7 +44,11 @@ function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {
     .then((snapshot) => {
       if (snapshot.exists()) {
         console.log(snapshot.val());
-        const productsData = Object.entries(snapshot.val()).map(
+        const snapshotVal = snapshot.val() as Record<
+          string,
+          Omit<ProductType, "상품코드">
+        >;
+        const productsData: ProductType[] = Object.entries(snapshotVal).map(
           ([상품코드, item]) => ({
             상품코드,
             ...item,
