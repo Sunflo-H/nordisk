@@ -3,7 +3,7 @@ import { useState } from "react";
 type StockModalProps = {
   size: string;
   qty: number;
-  onSave: () => void;
+  onSave: (size: string, newQty: number) => void;
   onClose: () => void;
 };
 
@@ -21,7 +21,7 @@ const StockModal: React.FC<StockModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-end">
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
       <div className="bg-white w-full max-w-md rounded-t-xl p-6 shadow-lg">
         <h3 className="text-lg font-bold mb-4">사이즈 {size} 수량 조절</h3>
         <div className="flex items-center justify-center space-x-4 mb-6">

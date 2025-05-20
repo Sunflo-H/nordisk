@@ -9,7 +9,9 @@ type ProductModalProps = {
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [showAllSizes, setShowAllSizes] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(
+    null
+  );
   const [stockData, setStockData] = useState<StockType>(product.재고);
 
   let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
@@ -18,11 +20,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);
   };
 
-  const handleSizeClick = (sizeValue: string) => {
-    selectedSize === sizeValue
-      ? setSelectedSize(null)
-      : setSelectedSize(sizeValue);
+  const handleSizeClick = (index: number) => {
+    selectedSizeIndex === index
+      ? setSelectedSizeIndex(null)
+      : setSelectedSizeIndex(index);
   };
+
+  const handleSave: (size: string, newQty: number) => void = (size, newQty) => {
+    setStockData((prev) => ({
+      ...prev,
+      [size]: newQty,
+    }));
+    setSelectedSizeIndex(null);
+  };
+
+  const openStockModal = () => {};
+
+  const closeStockModal = () => {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -54,10 +68,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                 <tr
                   key={i}
                   onClick={() => {
-                    handleSizeClick(value);
+                    handleSizeClick(i);
                   }}
                   className={`cursor-pointer ${
-                    selectedSize === value ? "bg-orange-100 " : ""
+                    selectedSizeIndex === i ? "bg-orange-100 " : ""
                   }`}
                 >
                   <td className="px-4 py-2 text-center">{value}</td>
@@ -68,12 +82,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               ))}
             </tbody>
           </table>
-          {selectedSize && (
+          {selectedSizeIndex && (
             <StockModal
-              size={selectedSize}
-              qty={selectedSize.qty}
+              size={sortedSize[selectedSizeIndex]}
+              qty={product.재고[sortedSize[selectedSizeIndex]]}
               onSave={handleSave}
-              onClose={() => setSelectedSize(null)}
+              onClose={() => setSelectedSizeIndex(null)}
             />
           )}
         </div>
