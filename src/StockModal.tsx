@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 type StockModalProps = {
-  size: number;
+  size: string;
   qty: number;
   onSave: () => void;
   onClose: () => void;

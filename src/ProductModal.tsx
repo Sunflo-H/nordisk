@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { ProductType, SizeKey } from "./types";
+import type { ProductType, SizeKey, StockType } from "./types";
+import StockModal from "./StockModal";
 
 type ProductModalProps = {
   product: ProductType;
@@ -8,8 +9,8 @@ type ProductModalProps = {
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [showAllSizes, setShowAllSizes] = useState(false);
-  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-  // const [tempProductsData, setTempProductsData] = useState({});
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [stockData, setStockData] = useState<StockType>(product.재고);
 
   let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
 
@@ -17,20 +18,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);
   };
 
-  const handleRowClick = (index: number) => {
-    selectedRowIndex === index
-      ? setSelectedRowIndex(null)
-      : setSelectedRowIndex(index);
+  const handleSizeClick = (sizeValue: string) => {
+    selectedSize === sizeValue
+      ? setSelectedSize(null)
+      : setSelectedSize(sizeValue);
   };
-
-  const handleDecreae = (index: number) => {
-    console.log(index);
-    console.log(product);
-  };
-
-  // const handleIncreae = (num: number) => {};
-
-  // const handleUpdate = () => {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -62,43 +54,28 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                 <tr
                   key={i}
                   onClick={() => {
-                    handleRowClick(i);
+                    handleSizeClick(value);
                   }}
                   className={`cursor-pointer ${
-                    selectedRowIndex === i ? "bg-orange-100 " : ""
+                    selectedSize === value ? "bg-orange-100 " : ""
                   }`}
                 >
                   <td className="px-4 py-2 text-center">{value}</td>
                   <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
-                    <div
-                      onClick={(e) => {
-                        handleDecreae(i);
-                        e.stopPropagation();
-                      }}
-                      className={`${
-                        selectedRowIndex === i
-                          ? "absolute top-1/2 left-10 -translate-y-1/2 flex items-center justify-center text-xl text-red-500 w-5 h-5 text-center border rounded-full"
-                          : "hidden"
-                      } `}
-                    >
-                      -
-                    </div>
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className={`${
-                        selectedRowIndex === i
-                          ? "absolute top-1/2 right-10 -translate-y-1/2 flex items-center justify-center text-xl  text-green-500 w-5 h-5 border rounded-full text-center"
-                          : "hidden"
-                      } `}
-                    >
-                      +
-                    </div>
                     <div>{product.재고[value]}</div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {selectedSize && (
+            <StockModal
+              size={selectedSize}
+              qty={selectedSize.qty}
+              onSave={handleSave}
+              onClose={() => setSelectedSize(null)}
+            />
+          )}
         </div>
       </div>
     </div>
