@@ -39,9 +39,9 @@ export type ExcelDataType = {
   [key in SizeKey]: number;
 };
 
-export type StockType = {
-  [key in SizeKey]: number;
-};
+// export type StockType = {
+//   [key in SizeKey]: number;
+// };
 
 export type UpdatedDataType = {
   [updatePaths: string]: ProductType;

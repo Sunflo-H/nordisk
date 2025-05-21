@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ProductType, SizeKey, StockType } from "./types";
+import type { ProductType, SizeKey } from "./types";
 import StockModal from "./StockModal";
 import { updateData } from "./firebase/firebaseDatabase";
 
@@ -9,11 +9,12 @@ type ProductModalProps = {
 };
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
+  const [productState, setProductState] = useState(product);
   const [showAllSizes, setShowAllSizes] = useState(false);
   const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(
     null
   );
-  const [stockData, setStockData] = useState<StockType>(product.재고);
+
   const [updatedProduct, setUpdatedProduct] = useState<ProductType>(product);
 
   let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
@@ -22,16 +23,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);
   };
 
-  const handleSizeClick = (index: number) => {
-    console.log("index : ", index);
+  // size를 클릭하여 stock manager modal을 오픈하는 핸들러
+  const handleOpenStockModal = (index: number) => {
     selectedSizeIndex === index
       ? setSelectedSizeIndex(null)
       : setSelectedSizeIndex(index);
-    openStockModal(index);
   };
 
-  const handleSave: (size: string, newQty: number) => void = (size, newQty) => {
+  const handleCloseStockModal: () => void = () => {
+    setSelectedSizeIndex(null);
+  };
+
+  const handleSave: () => void = () => {
     updateData(updatedProduct);
+    setProductState(updatedProduct);
     setSelectedSizeIndex(null);
   };
 
@@ -40,7 +45,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
       ...prev,
       재고: {
         ...prev.재고,
-        [size]: prev.재고[size]++,
+        [size]: prev.재고[size] + 1,
       },
     }));
   };
@@ -51,14 +56,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
       ...prev,
       재고: {
         ...prev.재고,
-        [size]: prev.재고[size]--,
+        [size]: prev.재고[size] - 1,
       },
     }));
   };
 
-  const openStockModal: (index: number) => void = (index) => {};
-
-  const closeStockModal = () => {};
+  useEffect(() => {
+    console.log(updatedProduct);
+    console.log(product);
+  }, [updatedProduct, product]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -90,7 +96,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                 <tr
                   key={i}
                   onClick={() => {
-                    handleSizeClick(i);
+                    handleOpenStockModal(i);
                   }}
                   className={`cursor-pointer ${
                     selectedSizeIndex === i ? "bg-orange-100 " : ""
@@ -98,7 +104,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                 >
                   <td className="px-4 py-2 text-center">{value}</td>
                   <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
-                    <div>{product.재고[value]}</div>
+                    <div>{productState.재고[value]}</div>
                   </td>
                 </tr>
               ))}
@@ -108,11 +114,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             <StockModal
               size={sortedSize[selectedSizeIndex]}
               qty={updatedProduct.재고[sortedSize[selectedSizeIndex]]}
-              product={product}
               onIncrease={handleIncrease}
               onDecrease={handleDecrease}
               onSave={handleSave}
-              onClose={() => setSelectedSizeIndex(null)}
+              onClose={handleCloseStockModal}
             />
           ) : (
             ""

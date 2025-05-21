@@ -1,31 +1,27 @@
 import { useState } from "react";
-import type { ProductType, SizeKey } from "./types";
+import type { SizeKey } from "./types";
 
 type StockModalProps = {
   size: SizeKey;
   qty: number;
-  product: ProductType;
   onIncrease: (size: SizeKey) => void;
   onDecrease: (size: SizeKey) => void;
-  onSave: (size: string, newQty: number) => void;
+  onSave: () => void;
   onClose: () => void;
 };
 
 const StockModal: React.FC<StockModalProps> = ({
   size,
   qty,
-  product,
   onIncrease,
   onDecrease,
   onSave,
   onClose,
 }) => {
   const [count, setCount] = useState(qty);
-  console.log(qty);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
-    // setCount(val);
     if (!isNaN(val) && val >= 0) setCount(val);
   };
 
@@ -69,7 +65,7 @@ const StockModal: React.FC<StockModalProps> = ({
             취소
           </button>
           <button
-            onClick={() => onSave(size, count)}
+            onClick={() => onSave()}
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
           >
             저장
