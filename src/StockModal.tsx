@@ -1,8 +1,11 @@
 import { useState } from "react";
+import type { SizeKey } from "./types";
 
 type StockModalProps = {
-  size: string;
+  size: SizeKey;
   qty: number;
+  onIncrease: (size: SizeKey) => void;
+  onDecrease: (size: SizeKey) => void;
   onSave: (size: string, newQty: number) => void;
   onClose: () => void;
 };
@@ -10,6 +13,8 @@ type StockModalProps = {
 const StockModal: React.FC<StockModalProps> = ({
   size,
   qty,
+  onIncrease,
+  onDecrease,
   onSave,
   onClose,
 }) => {
@@ -26,7 +31,10 @@ const StockModal: React.FC<StockModalProps> = ({
         <h3 className="text-lg font-bold mb-4">사이즈 {size} 수량 조절</h3>
         <div className="flex items-center justify-center space-x-4 mb-6">
           <button
-            onClick={() => setCount((prev) => Math.max(0, prev - 1))}
+            onClick={() => {
+              onDecrease(size);
+              setCount((prev) => prev--);
+            }}
             className="text-xl bg-gray-200 px-3 py-1 rounded-full"
           >
             -
@@ -39,7 +47,10 @@ const StockModal: React.FC<StockModalProps> = ({
             className="text-center w-20 border border-gray-300 rounded-md"
           />
           <button
-            onClick={() => setCount((prev) => prev + 1)}
+            onClick={() => {
+              onIncrease(size);
+              setCount((prev) => prev++);
+            }}
             className="text-xl bg-gray-200 px-3 py-1 rounded-full"
           >
             +

@@ -43,6 +43,6 @@ export type StockType = {
   [key in SizeKey]: number;
 };
 
-export type updateData = {
+export type UpdatedDataType = {
   [updatePaths: string]: ProductType;
 };

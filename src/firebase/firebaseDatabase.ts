@@ -1,14 +1,7 @@
-import {
-  child,
-  get,
-  getDatabase,
-  push,
-  ref,
-  set,
-  update,
-} from "firebase/database";
+import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
-import type { ExcelDataType, ProductType, updateData } from "../types";
+import type { ExcelDataType, ProductType, UpdatedDataType } from "../types";
+import "./firebaseConfig";
 
 const db = getDatabase();
 const dbRef = ref(db);
@@ -71,19 +64,17 @@ function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {
     });
 }
 
-function stockUpdate() {}
-
-function writeNewPost(updatedProduct: ProductType) {
+function updateData(updatedProduct: ProductType): void {
   // Get a key for a new Post.
-  const newPostKey = push(child(ref(db), "product")).key;
+  // const newPostKey = push(child(ref(db), "product")).key;
 
   // Write the new post's data simultaneously in the posts list and the user's post list.
-  const updates: updateData = {
+  const updates: UpdatedDataType = {
     //[업데이트할 DB 경로] : 업데이트 할 값,
   };
   updates["/product/" + updatedProduct.상품코드] = updatedProduct;
 
-  return update(ref(db), updates);
+  update(ref(db), updates);
 }
 
-export { writeExcelData, readData };
+export { writeExcelData, readData, updateData };

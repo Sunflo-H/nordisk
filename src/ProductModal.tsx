@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ProductType, SizeKey, StockType } from "./types";
 import StockModal from "./StockModal";
+import { updateData } from "./firebase/firebaseDatabase";
 
 type ProductModalProps = {
   product: ProductType;
@@ -13,6 +14,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     null
   );
   const [stockData, setStockData] = useState<StockType>(product.재고);
+  const [updatedProduct, setUpdatedProduct] = useState<ProductType>(product);
 
   let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
 
@@ -21,20 +23,40 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   };
 
   const handleSizeClick = (index: number) => {
+    console.log(index);
     selectedSizeIndex === index
       ? setSelectedSizeIndex(null)
       : setSelectedSizeIndex(index);
+    openStockModal(index);
   };
 
   const handleSave: (size: string, newQty: number) => void = (size, newQty) => {
-    setStockData((prev) => ({
-      ...prev,
-      [size]: newQty,
-    }));
+    updateData(updatedProduct);
     setSelectedSizeIndex(null);
   };
 
-  const openStockModal = () => {};
+  const handleIncrease: (size: SizeKey) => void = (size) => {
+    setUpdatedProduct((prev) => ({
+      ...prev,
+      재고: {
+        ...prev.재고,
+        [size]: prev.재고[size]++,
+      },
+    }));
+  };
+
+  const handleDecrease: (size: SizeKey) => void = (size) => {
+    if (product.재고[size] === 0) return;
+    setUpdatedProduct((prev) => ({
+      ...prev,
+      재고: {
+        ...prev.재고,
+        [size]: prev.재고[size]--,
+      },
+    }));
+  };
+
+  const openStockModal: (index: number) => void = (index) => {};
 
   const closeStockModal = () => {};
 
@@ -82,13 +104,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               ))}
             </tbody>
           </table>
-          {selectedSizeIndex && (
+          {selectedSizeIndex !== null ? (
             <StockModal
               size={sortedSize[selectedSizeIndex]}
-              qty={product.재고[sortedSize[selectedSizeIndex]]}
+              qty={updatedProduct.재고[sortedSize[selectedSizeIndex]]}
+              onIncrease={handleIncrease}
+              onDecrease={handleDecrease}
               onSave={handleSave}
               onClose={() => setSelectedSizeIndex(null)}
             />
+          ) : (
+            ""
           )}
         </div>
       </div>

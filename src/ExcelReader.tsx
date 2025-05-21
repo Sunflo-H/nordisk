@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
-import "./firebase/firebaseConfig";
+// import "./firebase/firebaseConfig";
 import { writeExcelData } from "./firebase/firebaseDatabase";
 import type { ExcelDataType } from "./types";
 
