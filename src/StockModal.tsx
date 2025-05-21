@@ -24,7 +24,7 @@ const StockModal: React.FC<StockModalProps> = ({
     const val = parseInt(e.target.value);
     if (!isNaN(val) && val >= 0) setCount(val);
   };
-  console.log(count);
+
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
       <div className="bg-white w-full max-w-md rounded-t-xl p-6 shadow-lg">
