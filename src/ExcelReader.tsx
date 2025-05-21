@@ -34,7 +34,7 @@ import type { ExcelDataType } from "./types";
 // 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelReader = () => {
   const [productsData, setProductsData] = useState<ExcelDataType[]>([]);
-  console.log(productsData);
+  // console.log(productsData);
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

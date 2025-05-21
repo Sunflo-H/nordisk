@@ -1,9 +1,10 @@
 import { useState } from "react";
-import type { SizeKey } from "./types";
+import type { ProductType, SizeKey } from "./types";
 
 type StockModalProps = {
   size: SizeKey;
   qty: number;
+  product: ProductType;
   onIncrease: (size: SizeKey) => void;
   onDecrease: (size: SizeKey) => void;
   onSave: (size: string, newQty: number) => void;
@@ -13,15 +14,18 @@ type StockModalProps = {
 const StockModal: React.FC<StockModalProps> = ({
   size,
   qty,
+  product,
   onIncrease,
   onDecrease,
   onSave,
   onClose,
 }) => {
   const [count, setCount] = useState(qty);
+  console.log(qty);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
+    // setCount(val);
     if (!isNaN(val) && val >= 0) setCount(val);
   };
 
@@ -33,7 +37,8 @@ const StockModal: React.FC<StockModalProps> = ({
           <button
             onClick={() => {
               onDecrease(size);
-              setCount((prev) => prev--);
+              if (count === 0) return;
+              setCount((prev) => prev - 1);
             }}
             className="text-xl bg-gray-200 px-3 py-1 rounded-full"
           >
@@ -49,7 +54,7 @@ const StockModal: React.FC<StockModalProps> = ({
           <button
             onClick={() => {
               onIncrease(size);
-              setCount((prev) => prev++);
+              setCount((prev) => prev + 1);
             }}
             className="text-xl bg-gray-200 px-3 py-1 rounded-full"
           >

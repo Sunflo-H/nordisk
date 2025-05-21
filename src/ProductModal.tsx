@@ -23,7 +23,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   };
 
   const handleSizeClick = (index: number) => {
-    console.log(index);
+    console.log("index : ", index);
     selectedSizeIndex === index
       ? setSelectedSizeIndex(null)
       : setSelectedSizeIndex(index);
@@ -108,6 +108,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             <StockModal
               size={sortedSize[selectedSizeIndex]}
               qty={updatedProduct.재고[sortedSize[selectedSizeIndex]]}
+              product={product}
               onIncrease={handleIncrease}
               onDecrease={handleDecrease}
               onSave={handleSave}
