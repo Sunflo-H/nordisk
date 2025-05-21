@@ -1,6 +1,14 @@
-import { child, get, getDatabase, ref, set } from "firebase/database";
+import {
+  child,
+  get,
+  getDatabase,
+  push,
+  ref,
+  set,
+  update,
+} from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
-import type { ExcelDataType, ProductType } from "../types";
+import type { ExcelDataType, ProductType, updateData } from "../types";
 
 const db = getDatabase();
 const dbRef = ref(db);
@@ -43,7 +51,6 @@ function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {
   get(child(dbRef, `product`))
     .then((snapshot) => {
       if (snapshot.exists()) {
-        console.log(snapshot.val());
         const snapshotVal = snapshot.val() as Record<
           string,
           Omit<ProductType, "상품코드">
@@ -62,6 +69,21 @@ function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {
     .catch((error) => {
       console.error(error);
     });
+}
+
+function stockUpdate() {}
+
+function writeNewPost(updatedProduct: ProductType) {
+  // Get a key for a new Post.
+  const newPostKey = push(child(ref(db), "product")).key;
+
+  // Write the new post's data simultaneously in the posts list and the user's post list.
+  const updates: updateData = {
+    //[업데이트할 DB 경로] : 업데이트 할 값,
+  };
+  updates["/product/" + updatedProduct.상품코드] = updatedProduct;
+
+  return update(ref(db), updates);
 }
 
 export { writeExcelData, readData };

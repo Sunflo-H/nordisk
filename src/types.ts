@@ -42,3 +42,7 @@ export type ExcelDataType = {
 export type StockType = {
   [key in SizeKey]: number;
 };
+
+export type updateData = {
+  [updatePaths: string]: ProductType;
+};
