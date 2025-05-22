@@ -14,48 +14,23 @@ const dbRef = ref(db);
 
 function saveExcelData(excelDataList: ExcelDataType[]): void {
   const mergedDataList = mergeExcelData(excelDataList);
-  // console.log(excelDataList);
-  // console.log(mergeExcelData(excelDataList));
-  mergedDataList.forEach((excelData) => {
-    console.log(excelData);
-  });
+
   mergedDataList.forEach((product) => {
+    const productRef = ref(db, "product/" + product.상품코드);
+    get(productRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log("기존 데이터 있음. 덮어씌움.");
+      } else {
+        console.log("신규 상품. 새로 등록.");
+      }
+      set(productRef, product);
+    });
     set(ref(db, "product/" + product.상품코드), {
       상품코드: product.상품코드,
       상품명: product.상품명,
       재고: product.재고, // 칼라별 사이즈 재고 구조
     });
   });
-  // mergedDataList.forEach((excelData) => {
-  //   set(ref(db, "product/" + excelData.상품코드), {
-  //     상품코드: excelData.상품코드,
-  //     상품명: excelData.상품명,
-  //     칼라: excelData.칼라,
-  //     수량: excelData.수량,
-  //     재고: {
-  //       "00": excelData["00"],
-  //       "01": excelData["01"],
-  //       "02": excelData["02"],
-  //       "03": excelData["03"],
-  //       "04": excelData["04"],
-  //       "05": excelData["05"],
-  //       "06": excelData["06"],
-  //       "07": excelData["07"],
-  //       "08": excelData["08"],
-  //       "09": excelData["09"],
-  //       10: excelData["10"],
-  //       11: excelData["11"],
-  //       12: excelData["12"],
-  //       13: excelData["13"],
-  //       14: excelData["14"],
-  //       15: excelData["15"],
-  //       16: excelData["16"],
-  //       17: excelData["17"],
-  //       18: excelData["18"],
-  //       19: excelData["19"],
-  //     },
-  //   });
-  // });
 }
 
 function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {

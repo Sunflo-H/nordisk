@@ -7,6 +7,7 @@ import type { ProductType } from "./types";
 
 function App() {
   const [productsData, setProductsData] = useState<ProductType[]>([]);
+  console.log(productsData);
   useEffect(() => {
     readData(setProductsData);
   }, []);

@@ -10,18 +10,14 @@ type ProductModalProps = {
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [productState, setProductState] = useState(product);
-  const [showAllSizes, setShowAllSizes] = useState(false);
   const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(
     null
   );
-
   const [updatedProduct, setUpdatedProduct] = useState<ProductType>(product);
+  const [selectedColor, setSelectedColor] = useState<string | null>();
 
+  console.log(Object.keys(product.재고));
   let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
-
-  const handleToggleSizeView = () => {
-    showAllSizes ? setShowAllSizes(false) : setShowAllSizes(true);
-  };
 
   // size를 클릭하여 stock manager modal을 오픈하는 핸들러
   const handleOpenStockModal = (index: number) => {
@@ -67,17 +63,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
       <div className="bg-white p-6 rounded-lg w-[90%] max-w-[600px] overflow-auto max-h-[90vh]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="w-40 text-xl font-bold">{product.상품코드}</h2>
-          <div
-            className={` cursor-pointer border rounded-sm px-1 py-2 `}
-            onClick={handleToggleSizeView}
-          >
-            {showAllSizes ? "모든 사이즈 보기" : "필요 사이즈만 보기"}
-          </div>
-          <div>저장</div>
           <button onClick={onClose} className="text-gray-500 hover:text-black">
             ✕
           </button>
         </div>
+        <div>{}</div>
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto text-sm">
             <thead>
