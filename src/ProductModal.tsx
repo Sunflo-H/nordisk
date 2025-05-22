@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ProductType, SizeKey } from "./types";
 import StockModal from "./StockModal";
 import { updateData } from "./firebase/firebaseDatabase";
@@ -32,6 +32,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
 
   const handleCloseStockModal: () => void = () => {
     setSelectedSizeIndex(null);
+    setUpdatedProduct(productState);
   };
 
   const handleSave: () => void = () => {
@@ -60,11 +61,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
       },
     }));
   };
-
-  useEffect(() => {
-    console.log(updatedProduct);
-    console.log(product);
-  }, [updatedProduct, product]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
