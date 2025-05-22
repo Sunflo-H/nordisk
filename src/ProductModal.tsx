@@ -17,7 +17,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>();
 
   console.log(Object.keys(product.재고));
-  let sortedSize = Object.keys(product.재고).sort() as SizeKey[];
+
+  let sortedColor = Object.keys(product.재고).sort() as SizeKey[];
+  const first_color_key = Object.keys(sortedColor)[0];
 
   // size를 클릭하여 stock manager modal을 오픈하는 핸들러
   const handleOpenStockModal = (index: number) => {
@@ -77,28 +79,35 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </tr>
             </thead>
             <tbody>
-              {sortedSize.map((value, i) => (
-                <tr
-                  key={i}
-                  onClick={() => {
-                    handleOpenStockModal(i);
-                  }}
-                  className={`cursor-pointer ${
-                    selectedSizeIndex === i ? "bg-orange-100 " : ""
-                  }`}
-                >
-                  <td className="px-4 py-2 text-center">{value}</td>
-                  <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
-                    <div>{productState.재고[value]}</div>
-                  </td>
-                </tr>
-              ))}
+              {sortedColor.map((color, i) => {
+                const 칼라별재고 = productState.재고[color];
+
+                return (
+                  <tr
+                    key={i}
+                    onClick={() => {
+                      handleOpenStockModal(i);
+                    }}
+                    className={`cursor-pointer ${
+                      selectedSizeIndex === i ? "bg-orange-100 " : ""
+                    }`}
+                  >
+                    // 여기에 color 대신 [칼라별재고]의 키값이 들어가야해 //
+                    그럴려면sortedColor를 map반복하면서 다시 [칼라별재고] 를 map
+                    해야겠네 // 이중 for문 써야해
+                    <td className="px-4 py-2 text-center">{color}</td>
+                    <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
+                      {/* <div>{productState.재고[first_color_key]}</div> */}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {selectedSizeIndex !== null ? (
             <StockModal
-              size={sortedSize[selectedSizeIndex]}
-              qty={updatedProduct.재고[sortedSize[selectedSizeIndex]]}
+              size={sortedColor[selectedSizeIndex]}
+              qty={updatedProduct.재고[sortedColor[selectedSizeIndex]]}
               onIncrease={handleIncrease}
               onDecrease={handleDecrease}
               onSave={handleSave}

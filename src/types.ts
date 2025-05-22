@@ -20,13 +20,20 @@ export type SizeKey =
   | "18"
   | "19";
 
+// export type colorKey =
+
 export type ProductType = {
   상품코드: string;
   상품명: string;
   칼라: string;
   수량: number;
+  // 재고: {
+  //   [key in SizeKey]: number;
+  // };
   재고: {
-    [key in SizeKey]: number;
+    [칼라: string]: {
+      [key in SizeKey]: number;
+    };
   };
 };
 
