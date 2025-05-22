@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 // import "./firebase/firebaseConfig";
-import { writeExcelData } from "./firebase/firebaseDatabase";
+import { saveExcelData } from "./firebase/firebaseDatabase";
 import type { ExcelDataType } from "./types";
 
 // const columnOrder = [
@@ -47,9 +47,11 @@ const ExcelReader = () => {
       const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet) as ExcelDataType[];
-      setProductsData(jsonData);
-      writeExcelData(jsonData);
+      const excelDataList = XLSX.utils
+        .sheet_to_json(sheet)
+        .splice(1) as ExcelDataType[];
+      setProductsData(excelDataList);
+      saveExcelData(excelDataList);
     };
 
     reader.readAsBinaryString(file);
