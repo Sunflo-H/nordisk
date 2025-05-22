@@ -82,7 +82,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             ✕
           </button>
         </div>
-        console.log("잔디 테스트");
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto text-sm">
             <thead>
