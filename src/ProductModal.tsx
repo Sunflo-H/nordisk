@@ -9,17 +9,22 @@ type ProductModalProps = {
 };
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
+  let arr = [1, 2, 3];
+  console.log(arr);
   const [productState, setProductState] = useState(product);
   const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(
     null
   );
   const [updatedProduct, setUpdatedProduct] = useState<ProductType>(product);
-  const [selectedColor, setSelectedColor] = useState<string | null>();
+  let sortedColor = Object.keys(product.재고).sort();
+  const first_color_key = sortedColor[0];
+  // const v = product.재고[first_color_key];
+  const [selectedColor, setSelectedColor] = useState<string>(first_color_key);
+  console.log(selectedColor);
+  const 재고배열 = Object.keys(product.재고[selectedColor]).sort() as SizeKey[];
 
-  console.log(Object.keys(product.재고));
-
-  let sortedColor = Object.keys(product.재고).sort() as SizeKey[];
-  const first_color_key = Object.keys(sortedColor)[0];
+  console.log(product.재고[selectedColor][재고배열[0]]);
+  // console.log(product.재고[selectedColor]["00"]);
 
   // size를 클릭하여 stock manager modal을 오픈하는 핸들러
   const handleOpenStockModal = (index: number) => {
@@ -79,10 +84,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </tr>
             </thead>
             <tbody>
-              {sortedColor.map((color, i) => {
-                const 칼라별재고 = productState.재고[color];
-
-                return (
+              {/* {product.재고[selectedColor].map((value, i) => (
+                <div>
                   <tr
                     key={i}
                     onClick={() => {
@@ -97,14 +100,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                     해야겠네 // 이중 for문 써야해
                     <td className="px-4 py-2 text-center">{color}</td>
                     <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
-                      {/* <div>{productState.재고[first_color_key]}</div> */}
+                      <div>{productState.재고[first_color_key]}</div>
                     </td>
                   </tr>
-                );
-              })}
+                </div>
+              ))} */}
             </tbody>
           </table>
-          {selectedSizeIndex !== null ? (
+          {/* {selectedSizeIndex !== null ? (
             <StockModal
               size={sortedColor[selectedSizeIndex]}
               qty={updatedProduct.재고[sortedColor[selectedSizeIndex]]}
@@ -115,7 +118,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             />
           ) : (
             ""
-          )}
+          )} */}
         </div>
       </div>
     </div>
