@@ -23,6 +23,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   console.log(selectedColor);
   const 재고배열 = Object.keys(product.재고[selectedColor]).sort() as SizeKey[];
 
+  console.log(product.재고[selectedColor]);
   console.log(product.재고[selectedColor][재고배열[0]]);
   // console.log(product.재고[selectedColor]["00"]);
 
@@ -84,27 +85,22 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </tr>
             </thead>
             <tbody>
-              {/* {product.재고[selectedColor].map((value, i) => (
-                <div>
-                  <tr
-                    key={i}
-                    onClick={() => {
-                      handleOpenStockModal(i);
-                    }}
-                    className={`cursor-pointer ${
-                      selectedSizeIndex === i ? "bg-orange-100 " : ""
-                    }`}
-                  >
-                    // 여기에 color 대신 [칼라별재고]의 키값이 들어가야해 //
-                    그럴려면sortedColor를 map반복하면서 다시 [칼라별재고] 를 map
-                    해야겠네 // 이중 for문 써야해
-                    <td className="px-4 py-2 text-center">{color}</td>
-                    <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
-                      <div>{productState.재고[first_color_key]}</div>
-                    </td>
-                  </tr>
-                </div>
-              ))} */}
+              {재고배열.map((size, i) => (
+                <tr
+                  key={i}
+                  onClick={() => {
+                    handleOpenStockModal(i);
+                  }}
+                  className={`cursor-pointer ${
+                    selectedSizeIndex === i ? "bg-orange-100 " : ""
+                  }`}
+                >
+                  <td className="px-4 py-2 text-center">{size}</td>
+                  <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
+                    <div>{productState.재고[first_color_key][size]}</div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
           {/* {selectedSizeIndex !== null ? (
