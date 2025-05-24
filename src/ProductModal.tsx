@@ -18,14 +18,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [updatedProduct, setUpdatedProduct] = useState<ProductType>(product);
   let sortedColor = Object.keys(product.재고).sort();
   const first_color_key = sortedColor[0];
-  // const v = product.재고[first_color_key];
   const [selectedColor, setSelectedColor] = useState<string>(first_color_key);
-  console.log(selectedColor);
   const 재고배열 = Object.keys(product.재고[selectedColor]).sort() as SizeKey[];
-
-  console.log(product.재고[selectedColor]);
-  console.log(product.재고[selectedColor][재고배열[0]]);
-  // console.log(product.재고[selectedColor]["00"]);
 
   // size를 클릭하여 stock manager modal을 오픈하는 핸들러
   const handleOpenStockModal = (index: number) => {
@@ -69,13 +63,24 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white p-6 rounded-lg w-[90%] max-w-[600px] overflow-auto max-h-[90vh]">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center">
           <h2 className="w-40 text-xl font-bold">{product.상품코드}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-black">
             ✕
           </button>
         </div>
-        <div>{}</div>
+        <div className="flex mb-4">
+          {sortedColor.map((color) => (
+            <h2
+              key={color}
+              className={`${selectedColor === color ? "bg-black" : ""}
+            font-bold w-20 border cursor-pointer `}
+            >
+              {color}
+            </h2>
+          ))}
+        </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto text-sm">
             <thead>
