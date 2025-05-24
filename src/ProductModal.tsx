@@ -8,6 +8,29 @@ type ProductModalProps = {
   onClose: () => void;
 };
 
+const sizeList: SizeKey[] = [
+  "00",
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
+  "13",
+  "14",
+  "15",
+  "16",
+  "17",
+  "18",
+  "19",
+];
+
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   let arr = [1, 2, 3];
   console.log(arr);
@@ -44,21 +67,37 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
       ...prev,
       재고: {
         ...prev.재고,
-        [size]: prev.재고[size] + 1,
+        [selectedColor]: {
+          ...prev.재고[selectedColor],
+          [size]: prev.재고[selectedColor][size] + 1,
+        },
       },
     }));
   };
 
   const handleDecrease: (size: SizeKey) => void = (size) => {
-    if (product.재고[size] === 0) return;
+    if (updatedProduct.재고[selectedColor][size] === 0) return;
     setUpdatedProduct((prev) => ({
       ...prev,
       재고: {
         ...prev.재고,
-        [size]: prev.재고[size] - 1,
+        [selectedColor]: {
+          ...prev.재고[selectedColor],
+          [size]: prev.재고[selectedColor][size] - 1,
+        },
       },
     }));
   };
+  // const handleDecrease: (size: SizeKey) => void = (size) => {
+  //   if (product.재고[size] === 0) return;
+  //   setUpdatedProduct((prev) => ({
+  //     ...prev,
+  //     재고: {
+  //       ...prev.재고,
+  //       [size]: prev.재고[size] - 1,
+  //     },
+  //   }));
+  // };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -108,10 +147,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               ))}
             </tbody>
           </table>
-          {/* {selectedSizeIndex !== null ? (
+          {selectedSizeIndex !== null ? (
             <StockModal
-              size={sortedColor[selectedSizeIndex]}
-              qty={updatedProduct.재고[sortedColor[selectedSizeIndex]]}
+              size={sizeList[selectedSizeIndex]}
+              qty={
+                updatedProduct.재고[selectedColor][sizeList[selectedSizeIndex]]
+              }
               onIncrease={handleIncrease}
               onDecrease={handleDecrease}
               onSave={handleSave}
@@ -119,7 +160,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             />
           ) : (
             ""
-          )} */}
+          )}
         </div>
       </div>
     </div>
