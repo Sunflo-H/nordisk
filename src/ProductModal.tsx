@@ -32,8 +32,6 @@ const sizeList: SizeKey[] = [
 ];
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
-  let arr = [1, 2, 3];
-  console.log(arr);
   const [productState, setProductState] = useState(product);
   const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(
     null
@@ -43,7 +41,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const first_color_key = sortedColor[0];
   const [selectedColor, setSelectedColor] = useState<string>(first_color_key);
   const 재고배열 = Object.keys(product.재고[selectedColor]).sort() as SizeKey[];
-
+  console.log(product.재고[selectedColor]);
   // size를 클릭하여 stock manager modal을 오픈하는 핸들러
   const handleOpenStockModal = (index: number) => {
     selectedSizeIndex === index
@@ -88,16 +86,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
       },
     }));
   };
-  // const handleDecrease: (size: SizeKey) => void = (size) => {
-  //   if (product.재고[size] === 0) return;
-  //   setUpdatedProduct((prev) => ({
-  //     ...prev,
-  //     재고: {
-  //       ...prev.재고,
-  //       [size]: prev.재고[size] - 1,
-  //     },
-  //   }));
-  // };
+
+  const handleChangeColor: (color: string) => void = (color) => {
+    setSelectedColor(color);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -112,6 +104,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
           {sortedColor.map((color) => (
             <h2
               key={color}
+              onClick={() => handleChangeColor(color)}
               className={`${selectedColor === color ? "bg-black" : ""}
             font-bold w-20 border cursor-pointer `}
             >
@@ -141,7 +134,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                 >
                   <td className="px-4 py-2 text-center">{size}</td>
                   <td className="px-4 py-2 flex justify-center items-center gap-2 relative">
-                    <div>{productState.재고[first_color_key][size]}</div>
+                    <div>{productState.재고[selectedColor][size]}</div>
                   </td>
                 </tr>
               ))}
