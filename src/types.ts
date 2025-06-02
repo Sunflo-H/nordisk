@@ -42,6 +42,9 @@ export type ExcelDataType = {
   상품명: string;
   칼라: string;
   수량: number;
+  year: string;
+  category: string;
+  판매가: number;
 } & {
   [key in SizeKey]: number;
 };
