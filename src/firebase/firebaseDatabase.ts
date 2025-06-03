@@ -1,4 +1,12 @@
-import { child, get, getDatabase, ref, set, update } from "firebase/database";
+import {
+  child,
+  get,
+  getDatabase,
+  ref,
+  remove,
+  set,
+  update,
+} from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
 import type {
   ExcelDataType,
@@ -96,4 +104,16 @@ function mergeExcelData(excelRows: ExcelDataType[]): FinalDataType[] {
   return result;
 }
 
-export { saveExcelData, readData, updateData };
+function deleteData() {
+  const productsRef = ref(db, "products");
+
+  set(productsRef, null)
+    .then(() => {
+      console.log("모든 product가 성공적으로 삭제되었습니다.");
+    })
+    .catch((error) => {
+      console.error("삭제 중 오류 발생:", error);
+    });
+}
+
+export { saveExcelData, readData, updateData, deleteData };
