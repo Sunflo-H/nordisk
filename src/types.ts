@@ -20,8 +20,6 @@ export type SizeKey =
   | "18"
   | "19";
 
-// export type colorKey =
-
 export type ProductType = {
   상품코드: string;
   상품명: string;
@@ -68,21 +66,6 @@ export type ExcelDataType2 = {
     };
   };
 };
-
-/** 칼라별 재고를 포함한 타입 */
-// type SizeKey = "00" | "01" | ... | "19";
-
-// type StockPerColor = {
-//   [key in SizeKey]: number;
-// };
-
-// type ProductData = {
-//   상품코드: string;
-//   상품명: string;
-//   재고: {
-//     [칼라: string]: StockPerColor;
-//   };
-// };
 
 export type FinalDataType = {
   상품코드: string;
