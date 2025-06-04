@@ -13,7 +13,7 @@ function App() {
   return (
     <>
       <ExcelManager />
-      <div className="grid grid-cols-2 gap-3 p-4">
+      <div className="grid grid-cols-3 gap-3 p-4">
         {productsData.map((product) => (
           <ProductCard product={product} key={product.상품코드} />
         ))}
