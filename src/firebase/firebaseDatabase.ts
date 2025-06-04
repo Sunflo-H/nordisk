@@ -1,16 +1,8 @@
-import {
-  child,
-  get,
-  getDatabase,
-  ref,
-  remove,
-  set,
-  update,
-} from "firebase/database";
+import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
 import type {
   ExcelDataType,
-  FinalDataType,
+  MergedExcelDataType,
   ProductType,
   SizeKey,
   UpdatedDataType,
@@ -25,14 +17,14 @@ function saveExcelData(excelDataList: ExcelDataType[]): void {
 
   mergedDataList.forEach((product) => {
     const productRef = ref(db, "product/" + product.상품코드);
-    get(productRef).then((snapshot) => {
-      if (snapshot.exists()) {
-        console.log("기존 데이터 있음. 덮어씌움.");
-      } else {
-        console.log("신규 상품. 새로 등록.");
-      }
-      set(productRef, product);
-    });
+    // get(productRef).then((snapshot) => {
+    //   if (snapshot.exists()) {
+    //     console.log("기존 데이터 있음. 덮어씌움.");
+    //   } else {
+    //     console.log("신규 상품. 새로 등록.");
+    //   }
+    //   set(productRef, product);
+    // });
     set(ref(db, "product/" + product.상품코드), {
       상품코드: product.상품코드,
       상품명: product.상품명,
@@ -75,11 +67,12 @@ function updateData(updatedProduct: ProductType): void {
   update(ref(db), updates);
 }
 
-function mergeExcelData(excelRows: ExcelDataType[]): FinalDataType[] {
-  const productMap = new Map<string, FinalDataType>();
+/** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
+function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
+  const productMap = new Map<string, MergedExcelDataType>();
 
   excelRows.forEach((row) => {
-    const { 상품코드, 상품명, 칼라, 수량, ...sizes } = row;
+    const { 상품코드, 상품명, 칼라, 재고, ...sizes } = row;
 
     // 상품코드로 기존 데이터가 있는지 확인
     if (!productMap.has(상품코드)) {

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 // import "./firebase/firebaseConfig";
-import { saveExcelData } from "./firebase/firebaseDatabase";
+import { deleteData, saveExcelData } from "./firebase/firebaseDatabase";
 import type { ExcelDataType } from "./types";
 
 // const columnOrder = [
@@ -33,8 +33,6 @@ import type { ExcelDataType } from "./types";
 
 // 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelManager = () => {
-  // const [excelRowData, setExcelRowData] = useState<ExcelDataType[]>([]);
-  // console.log(excelRowData);
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -50,19 +48,25 @@ const ExcelManager = () => {
       const excelDataList = XLSX.utils
         .sheet_to_json(sheet)
         .splice(1) as ExcelDataType[];
-      // setExcelRowData(excelDataList);
-      saveExcelData(excelDataList);
+      console.log(excelDataList[0]);
+      // saveExcelData(excelDataList);
     };
 
     reader.readAsBinaryString(file);
   };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const handleFileInput = () => {
     fileInputRef.current?.click(); // input 클릭 트리거
   };
+
+  const handleDeleteAllProducts = () => {
+    deleteData();
+  };
+
   return (
-    <div>
+    <div className="flex justify-around">
       <input
         type="file"
         accept=".xlsx, .xls"
@@ -76,7 +80,10 @@ const ExcelManager = () => {
       >
         엑셀 파일 업로드
       </div>
-      <div className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block">
+      <div
+        className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
+        onClick={handleDeleteAllProducts}
+      >
         데이터 삭제
       </div>
     </div>
