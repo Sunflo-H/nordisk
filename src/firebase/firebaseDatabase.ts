@@ -17,15 +17,7 @@ function saveExcelData(excelDataList: ExcelDataType[]): void {
 
   mergedDataList.forEach((product) => {
     const productRef = ref(db, "product/" + product.상품코드);
-    // get(productRef).then((snapshot) => {
-    //   if (snapshot.exists()) {
-    //     console.log("기존 데이터 있음. 덮어씌움.");
-    //   } else {
-    //     console.log("신규 상품. 새로 등록.");
-    //   }
-    //   set(productRef, product);
-    // });
-    set(ref(db, "product/" + product.상품코드), {
+    set(productRef, {
       상품코드: product.상품코드,
       상품명: product.상품명,
       재고: product.재고, // 칼라별 사이즈 재고 구조

@@ -1,43 +1,15 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import * as XLSX from "xlsx";
-// import "./firebase/firebaseConfig";
 import { deleteData, saveExcelData } from "./firebase/firebaseDatabase";
 import type { ExcelDataType } from "./types";
 
-// const columnOrder = [
-//   "상품코드",
-//   "상품명",
-//   "칼라",
-//   "수량",
-//   "00",
-//   "01",
-//   "02",
-//   "03",
-//   "04",
-//   "05",
-//   "06",
-//   "07",
-//   "08",
-//   "09",
-//   "10",
-//   "11",
-//   "12",
-//   "13",
-//   "14",
-//   "15",
-//   "16",
-//   "17",
-//   "18",
-//   "19",
-// ];
-
 // 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelManager = () => {
+  // 엑셀 파일을 읽고 데이터를 변환 후 파이어베이스에 저장한다.
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-
     reader.onload = (evt: ProgressEvent<FileReader>) => {
       const binaryStr = evt.target?.result;
       if (typeof binaryStr !== "string") return;
@@ -45,10 +17,12 @@ const ExcelManager = () => {
       const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
+
+      // 첫번째 행을 splice하는 이유는 첫번째 행은 상품명, 가격 등의 속성 데이터이기 때문이다.
       const excelDataList = XLSX.utils
         .sheet_to_json(sheet)
         .splice(1) as ExcelDataType[];
-      console.log(excelDataList[0]);
+      console.log(excelDataList);
       // saveExcelData(excelDataList);
     };
 
