@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import * as XLSX from "xlsx";
-import { deleteData, saveExcelData } from "./firebase/firebaseDatabase";
-import type { ExcelDataType } from "./types";
+import { deleteData, saveToFirebase } from "./firebase/firebaseDatabase";
+import type { ExcelDataType, MergedExcelDataType, SizeKey } from "./types";
 
 // 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelManager = () => {
@@ -23,7 +23,8 @@ const ExcelManager = () => {
         .sheet_to_json(sheet)
         .splice(1) as ExcelDataType[];
       console.log(excelDataList);
-      // saveExcelData(excelDataList);
+      const mergedDataList = mergeExcelData(excelDataList);
+      saveToFirebase(mergedDataList);
     };
 
     reader.readAsBinaryString(file);
@@ -63,5 +64,35 @@ const ExcelManager = () => {
     </div>
   );
 };
+
+/** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
+function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
+  const productMap = new Map<string, MergedExcelDataType>();
+
+  excelRows.forEach((row) => {
+    const { 상품코드, 상품명, 칼라, 재고, ...sizes } = row;
+
+    // 상품코드로 기존 데이터가 있는지 확인
+    if (!productMap.has(상품코드)) {
+      productMap.set(상품코드, {
+        상품코드,
+        상품명,
+        재고: {},
+      });
+    }
+    const product = productMap.get(상품코드)!;
+
+    // 해당 상품의 재고에 칼라 추가
+    product.재고[칼라] = {} as Record<SizeKey, number>;
+
+    // 사이즈별 수량 추가
+    (Object.keys(sizes) as SizeKey[]).forEach((size) => {
+      product.재고[칼라][size] = sizes[size];
+    });
+  });
+
+  const result = Array.from(productMap.values());
+  return result;
+}
 
 export default ExcelManager;

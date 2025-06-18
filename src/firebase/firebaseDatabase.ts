@@ -12,9 +12,7 @@ import "./firebaseConfig";
 const db = getDatabase();
 const dbRef = ref(db);
 
-function saveExcelData(excelDataList: ExcelDataType[]): void {
-  const mergedDataList = mergeExcelData(excelDataList);
-
+function saveToFirebase(mergedDataList: MergedExcelDataType[]): void {
   mergedDataList.forEach((product) => {
     const productRef = ref(db, "product/" + product.상품코드);
     set(productRef, {
@@ -59,36 +57,6 @@ function updateData(updatedProduct: ProductType): void {
   update(ref(db), updates);
 }
 
-/** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
-function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
-  const productMap = new Map<string, MergedExcelDataType>();
-
-  excelRows.forEach((row) => {
-    const { 상품코드, 상품명, 칼라, 재고, ...sizes } = row;
-
-    // 상품코드로 기존 데이터가 있는지 확인
-    if (!productMap.has(상품코드)) {
-      productMap.set(상품코드, {
-        상품코드,
-        상품명,
-        재고: {},
-      });
-    }
-    const product = productMap.get(상품코드)!;
-
-    // 해당 상품의 재고에 칼라 추가
-    product.재고[칼라] = {} as Record<SizeKey, number>;
-
-    // 사이즈별 수량 추가
-    (Object.keys(sizes) as SizeKey[]).forEach((size) => {
-      product.재고[칼라][size] = sizes[size];
-    });
-  });
-
-  const result = Array.from(productMap.values());
-  return result;
-}
-
 function deleteData() {
   const productsRef = ref(db, "products");
 
@@ -101,4 +69,4 @@ function deleteData() {
     });
 }
 
-export { saveExcelData, readData, updateData, deleteData };
+export { saveToFirebase, readData, updateData, deleteData };
