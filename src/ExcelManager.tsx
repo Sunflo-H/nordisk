@@ -1,7 +1,12 @@
 import { useRef } from "react";
 import * as XLSX from "xlsx";
 import { deleteData, saveToFirebase } from "./firebase/firebaseDatabase";
-import type { ExcelDataType, MergedExcelDataType, SizeKey } from "./types";
+import type {
+  ExcelDataType,
+  MergedExcelDataType,
+  ProductType,
+  SizeKey,
+} from "./types";
 
 // 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
 const ExcelManager = () => {
@@ -18,7 +23,7 @@ const ExcelManager = () => {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
 
-      // 첫번째 행을 splice하는 이유는 첫번째 행은 상품명, 가격 등의 속성 데이터이기 때문이다.
+      // 첫번째 행을 splice하는 이유 : 첫번째 행은 상품명, 가격 등의 속성 데이터이기 때문이다.
       const excelDataList = XLSX.utils
         .sheet_to_json(sheet)
         .splice(1) as ExcelDataType[];
@@ -64,6 +69,38 @@ const ExcelManager = () => {
     </div>
   );
 };
+
+function transformExcelData(data: ExcelDataType[]): ProductType[] {
+  return data.map((item) => {
+    const 상품코드 = item.상품코드;
+    const 성별코드 = 상품코드.charAt(1);
+    const 연도코드 = 상품코드.slice(3, 5);
+    const 카테고리코드 = 상품코드.charAt(5);
+
+    const 성별 =
+      { M: "남성", W: "여성", U: "공용", X: "키즈" }[성별코드] || "기타";
+    const 연도 = parseInt(연도코드, 10);
+    const 카테고리 =
+      { "1": "자켓", "2": "티셔츠", "3": "바지", "4": "셔츠", "5": "패딩" }[
+        카테고리코드
+      ] || "악세사리";
+
+    return {
+      상품코드,
+      상품명: item.상품명,
+      칼라: item.칼라,
+      수량: item.재고,
+      재고: {
+        [item.칼라]: {
+          ...extractSizeData(item), // 사이즈 필드만 뽑는 함수
+        },
+      },
+      연도,
+      카테고리,
+      성별,
+    };
+  });
+}
 
 /** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
 function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {

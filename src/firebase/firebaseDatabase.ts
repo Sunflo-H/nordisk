@@ -1,10 +1,8 @@
 import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
 import type {
-  ExcelDataType,
   MergedExcelDataType,
   ProductType,
-  SizeKey,
   UpdatedDataType,
 } from "../types";
 import "./firebaseConfig";

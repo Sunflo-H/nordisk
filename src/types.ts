@@ -31,9 +31,8 @@ export type ProductType = {
       [key in SizeKey]: number;
     };
   };
-
-  // 연도: number;
-  // 카테고리 : string;
+  연도: number;
+  카테고리: string;
 };
 
 // 엑셀 한줄한줄의 데이터의 타입
@@ -51,18 +50,6 @@ export type ExcelDataType = {
 export type UpdatedDataType = {
   [updatePaths: string]: ProductType;
 };
-
-// export type ExcelDataType2 = {
-//   상품코드: string;
-//   상품명: string;
-//   수량: number;
-//   칼라: string;
-//   재고: {
-//     칼라: {
-//       [key in SizeKey]: number;
-//     };
-//   };
-// };
 
 export type MergedExcelDataType = {
   상품코드: string;
