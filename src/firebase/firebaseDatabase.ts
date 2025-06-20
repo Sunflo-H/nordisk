@@ -10,14 +10,11 @@ import "./firebaseConfig";
 const db = getDatabase();
 const dbRef = ref(db);
 
-function saveToFirebase(mergedDataList: MergedExcelDataType[]): void {
-  mergedDataList.forEach((product) => {
+function saveToFirebase(productDataList: ProductType[]): void {
+  productDataList.forEach((product) => {
     const productRef = ref(db, "product/" + product.상품코드);
-    set(productRef, {
-      상품코드: product.상품코드,
-      상품명: product.상품명,
-      재고: product.재고, // 칼라별 사이즈 재고 구조
-    });
+    // const { 상품코드, 상품명, 연도, 카테고리, 성별, 재고 } = product;
+    set(productRef, product);
   });
 }
 

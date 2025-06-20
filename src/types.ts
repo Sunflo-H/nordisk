@@ -24,15 +24,14 @@ export type SizeKey =
 export type ProductType = {
   상품코드: string;
   상품명: string;
-  칼라: string;
-  수량: number;
+  연도: number;
+  카테고리: string;
+  성별: string;
   재고: {
     [칼라: string]: {
       [key in SizeKey]: number;
     };
   };
-  연도: number;
-  카테고리: string;
 };
 
 // 엑셀 한줄한줄의 데이터의 타입
@@ -54,6 +53,8 @@ export type UpdatedDataType = {
 export type MergedExcelDataType = {
   상품코드: string;
   상품명: string;
+  칼라: string;
+  판매가: number;
   재고: {
     [칼라: string]: {
       [key in SizeKey]: number;

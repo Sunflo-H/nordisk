@@ -29,7 +29,8 @@ const ExcelManager = () => {
         .splice(1) as ExcelDataType[];
       console.log(excelDataList);
       const mergedDataList = mergeExcelData(excelDataList);
-      saveToFirebase(mergedDataList);
+      const productDataList = transformExcelData(mergedDataList);
+      saveToFirebase(productDataList);
     };
 
     reader.readAsBinaryString(file);
@@ -70,36 +71,37 @@ const ExcelManager = () => {
   );
 };
 
-function transformExcelData(data: ExcelDataType[]): ProductType[] {
-  return data.map((item) => {
+function transformExcelData(dataList: MergedExcelDataType[]): ProductType[] {
+  const transformedDataList: ProductType[] = dataList.map((item) => {
     const 상품코드 = item.상품코드;
     const 성별코드 = 상품코드.charAt(1);
     const 연도코드 = 상품코드.slice(3, 5);
     const 카테고리코드 = 상품코드.charAt(5);
 
-    const 성별 =
+    const 성별: string =
       { M: "남성", W: "여성", U: "공용", X: "키즈" }[성별코드] || "기타";
-    const 연도 = parseInt(연도코드, 10);
-    const 카테고리 =
-      { "1": "자켓", "2": "티셔츠", "3": "바지", "4": "셔츠", "5": "패딩" }[
-        카테고리코드
-      ] || "악세사리";
+    const 연도: number = parseInt(연도코드, 10);
+    const 카테고리: string =
+      {
+        "1": "자켓",
+        "2": "티셔츠",
+        "3": "바지",
+        "4": "셔츠",
+        "5": "패딩",
+        N: "신발",
+        C: "모자",
+      }[카테고리코드] || "악세사리";
 
     return {
       상품코드,
       상품명: item.상품명,
-      칼라: item.칼라,
-      수량: item.재고,
-      재고: {
-        [item.칼라]: {
-          ...extractSizeData(item), // 사이즈 필드만 뽑는 함수
-        },
-      },
       연도,
       카테고리,
       성별,
+      재고: item.재고,
     };
   });
+  return transformedDataList;
 }
 
 /** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
@@ -107,13 +109,15 @@ function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
   const productMap = new Map<string, MergedExcelDataType>();
 
   excelRows.forEach((row) => {
-    const { 상품코드, 상품명, 칼라, 재고, ...sizes } = row;
+    const { 상품코드, 상품명, 칼라, 재고, 판매가, ...sizes } = row;
 
     // 상품코드로 기존 데이터가 있는지 확인
     if (!productMap.has(상품코드)) {
       productMap.set(상품코드, {
         상품코드,
         상품명,
+        칼라,
+        판매가,
         재고: {},
       });
     }
