@@ -23,12 +23,12 @@ const ExcelManager = () => {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
 
-      // 첫번째 행을 splice하는 이유 : 첫번째 행은 상품명, 가격 등의 속성 데이터이기 때문이다.
+      // 첫번째 행과 마지막행을 splice하는 이유 : 첫번째 행은 상품명, 가격 등의 속성 데이터이고, 마지막 행은 총합이기 때문
       const excelDataList = XLSX.utils
         .sheet_to_json(sheet)
-        .splice(1) as ExcelDataType[];
-      console.log(excelDataList);
+        .slice(1, -1) as ExcelDataType[];
       const mergedDataList = mergeExcelData(excelDataList);
+
       const productDataList = transformExcelData(mergedDataList);
       saveToFirebase(productDataList);
     };
@@ -72,8 +72,8 @@ const ExcelManager = () => {
 };
 
 function transformExcelData(dataList: MergedExcelDataType[]): ProductType[] {
-  const transformedDataList: ProductType[] = dataList.map((item) => {
-    const 상품코드 = item.상품코드;
+  const transformedDataList: ProductType[] = dataList.map((data) => {
+    const 상품코드 = data.상품코드;
     const 성별코드 = 상품코드.charAt(1);
     const 연도코드 = 상품코드.slice(3, 5);
     const 카테고리코드 = 상품코드.charAt(5);
@@ -94,11 +94,11 @@ function transformExcelData(dataList: MergedExcelDataType[]): ProductType[] {
 
     return {
       상품코드,
-      상품명: item.상품명,
+      상품명: data.상품명,
       연도,
       카테고리,
       성별,
-      재고: item.재고,
+      재고: data.재고,
     };
   });
   return transformedDataList;

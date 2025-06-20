@@ -1,10 +1,6 @@
 import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
-import type {
-  MergedExcelDataType,
-  ProductType,
-  UpdatedDataType,
-} from "../types";
+import type { ProductType, UpdatedDataType } from "../types";
 import "./firebaseConfig";
 
 const db = getDatabase();
@@ -13,7 +9,6 @@ const dbRef = ref(db);
 function saveToFirebase(productDataList: ProductType[]): void {
   productDataList.forEach((product) => {
     const productRef = ref(db, "product/" + product.상품코드);
-    // const { 상품코드, 상품명, 연도, 카테고리, 성별, 재고 } = product;
     set(productRef, product);
   });
 }
@@ -53,7 +48,7 @@ function updateData(updatedProduct: ProductType): void {
 }
 
 function deleteData() {
-  const productsRef = ref(db, "products");
+  const productsRef = ref(db, "product");
 
   set(productsRef, null)
     .then(() => {
