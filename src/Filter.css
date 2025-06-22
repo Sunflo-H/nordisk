@@ -1,0 +1,61 @@
+/* 초기 상태: 동그란 버튼 */
+.filter-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #cde8d1;
+  border: none;
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+
+/* 오버레이: 기본은 작고 숨겨짐 */
+.filter-overlay {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #f3d5ce;
+  transition: all 0.5s ease;
+  z-index: 9;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.filter-overlay.active {
+  width: 100vw;
+  height: 100vh;
+  bottom: 0;
+  right: 0;
+  border-radius: 0;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 필터 안쪽 내용 */
+.filter-content {
+  opacity: 0;
+  padding: 60px 24px;
+  transition: opacity 0.4s ease;
+}
+
+.filter-overlay.active .filter-content {
+  opacity: 1;
+}
+
+/* 닫기 버튼 */
+#closeBtn {
+  margin-top: 20px;
+  padding: 8px 16px;
+  background: #ffeaea;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
