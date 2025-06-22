@@ -1,6 +1,5 @@
 import { useState } from "react";
-import "./Filter.css";
-import FilterBtn from "./FilterBtn";
+import FilterToggleBtn from "./FilterToggle";
 import FilterOverlay from "./FilterOverlay";
 
 type FilterProps = {};
@@ -12,7 +11,7 @@ const Filter: React.FC<FilterProps> = () => {
   };
   return (
     <div className="filter-container">
-      <FilterBtn toggleFilter={toggleFilter} />
+      <FilterToggleBtn isActive={isActive} toggleFilter={toggleFilter} />
       <FilterOverlay isActive={isActive} toggleFilter={toggleFilter} />
     </div>
   );

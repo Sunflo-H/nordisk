@@ -26,7 +26,9 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
         <label>
           <input type="checkbox" /> 키즈
         </label>
-        <button id="closeBtn">닫기</button>
+        <button id="closeBtn" onClick={toggleFilter}>
+          닫기
+        </button>
       </div>
     </div>
   );
