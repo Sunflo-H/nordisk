@@ -1,5 +1,5 @@
 import { useState } from "react";
-import FilterToggleBtn from "./FilterToggle";
+import FilterToggleBtn from "./FilterToggleBtn";
 import FilterOverlay from "./FilterOverlay";
 
 type FilterProps = {};
