@@ -1,10 +1,19 @@
-@import "tailwindcss";
+/* 전부 다 index.css로 옮김 */
+
+/* @import "tailwindcss";
 
 body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-use-select: none;
   user-select: none;
+
+  overflow: scroll; 
+  scrollbar-width: none; 
+}
+
+body::-webkit-scrollbar {
+  display: none; 
 }
 
 #root {
@@ -14,15 +23,12 @@ body {
   text-align: center;
 }
 
-/* input number 화살표 없애기 */
-/* Chrome, Safari, Edge */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Firefox */
 input[type="number"] {
   -moz-appearance: textfield;
-}
+} */

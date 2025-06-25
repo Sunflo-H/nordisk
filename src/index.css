@@ -16,6 +16,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -31,6 +38,19 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-use-select: none;
+  user-select: none;
+
+  -ms-overflow-style: none;
+  overflow: scroll; /* 또는 auto */
+  scrollbar-width: none; /* Firefox */
+}
+
+::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 h1 {
@@ -49,7 +69,8 @@ h1 {
   cursor: pointer;
   transition: border-color 0.25s;
 } */
-button {
+
+/* button {
   background: inherit;
   border: none;
   box-shadow: none;
@@ -65,7 +86,7 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
+} */
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -78,4 +99,17 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* input number 화살표 없애기 */
+/* Chrome, Safari, Edge */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
 }
