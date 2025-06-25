@@ -1,5 +1,4 @@
 import React from "react";
-import { FaFilter } from "react-icons/fa";
 import { FiFilter } from "react-icons/fi";
 
 type FilterToggleBtnProps = {
@@ -13,12 +12,10 @@ const FilterToggleBtn: React.FC<FilterToggleBtnProps> = ({
 }) => {
   return (
     <div
-      className={`filter-toggle bg-blue-500 w-20 h-20 flex items-center justify-center${
-        isActive ? "hidden" : ""
-      } `}
+      className={`filter-toggle ${isActive ? "active" : ""} `}
       onClick={toggleFilter}
     >
-      <FiFilter className="text-white text-3xl" />
+      <FiFilter className="filter-icon" />
     </div>
   );
 };
