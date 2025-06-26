@@ -13,7 +13,7 @@ function App() {
     readData(setProductsData);
   }, []);
   return (
-    <>
+    <div className="max-w-[430px] mx-auto">
       <ExcelManager />
       <Filter />
       <div className="grid grid-cols-3 gap-3 p-4">
@@ -21,7 +21,7 @@ function App() {
           <ProductCard product={product} key={product.상품코드} />
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
