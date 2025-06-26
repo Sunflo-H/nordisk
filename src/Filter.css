@@ -15,15 +15,15 @@
   padding-top: 5px;
   border-radius: 50%;
   background-color: var(--filter-main-color);
-
   border: none;
   z-index: 10;
   cursor: pointer;
-  transition: all 0.4s ease;
+  transition: all 0.3s ease;
 }
 
 .filter-toggle.active {
-  display: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .filter-icon {
@@ -41,29 +41,34 @@
   height: 100vh;
   z-index: 8;
   pointer-events: none;
+  transition: all 0.5s ease;
 }
 
 .filter-blackbox.active {
   pointer-events: auto;
   background-color: rgba(0, 0, 0, 0.5);
-  transition: all 0.5s ease;
 }
 
-/* 오버레이: 기본은 작고 숨겨짐 */
+/* 오버레이: 기본은 숨겨짐 */
 .filter-overlay {
   position: fixed;
   bottom: 0;
   left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  transform: translate(0, 100%);
   width: 100vw;
+  max-width: 420px;
+  min-width: 320px;
   height: 100vh;
   border-radius: 16px;
   background-color: white;
-  z-index: 9;
+  z-index: 11;
   overflow: hidden;
   pointer-events: none;
   opacity: 1;
   transition: all 0.5s ease;
-  transform: translateY(100%);
 }
 
 .filter-overlay.active {
@@ -73,26 +78,15 @@
   pointer-events: auto;
 }
 
-/* 필터 안쪽 내용 */
-.filter-content {
-  opacity: 0;
-  padding: 60px 24px;
-  transition: opacity 0.4s ease;
-}
-
-.filter-overlay.active .filter-content {
-  opacity: 1;
-}
-
 /* 닫기 버튼 */
-#closeBtn {
+/* .closeBtn {
   margin-top: 20px;
   padding: 8px 16px;
   background: #ffeaea;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-}
+} */
 
 /* 모바일(최대 600px)에서는 더 작은 크기 적용 */
 @media (max-width: 600px) {
