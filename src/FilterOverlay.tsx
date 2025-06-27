@@ -6,6 +6,7 @@ type FilterOverlayProps = {
   toggleFilter: () => void;
 };
 
+const yearOptions = ["2025", "2024", "2023"];
 const genderOptions = ["공용", "남성", "여성", "키즈"];
 const categoryOptions = [
   "상의",
@@ -21,6 +22,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
   isActive,
   toggleFilter,
 }) => {
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
@@ -29,6 +31,20 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
       prev.includes(gender)
         ? prev.filter((g) => g !== gender)
         : [...prev, gender]
+    );
+  };
+
+  const handleYearClick = (year: string) => {
+    setSelectedGenders((prev) =>
+      prev.includes(year) ? prev.filter((g) => g !== year) : [...prev, year]
+    );
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
     );
   };
 
@@ -45,6 +61,26 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
           <div className="font-bold text-2xl">상품 필터</div>
           <div className="cursor-pointer" onClick={toggleFilter}>
             <IoClose className=" font-bold text-4xl" />
+          </div>
+        </div>
+        <div className="flex flex-col items-center px-4 ">
+          <div className="w-full text-left text-xl font-bold pt-4 pb-3">
+            연도
+          </div>
+          <div className="flex w-full gap-2 flex-wrap pb-8 border-b border-gray-200">
+            {yearOptions.map((year) => (
+              <div
+                key={year}
+                className={`cursor-pointer px-4 py-2 rounded-full border border-gray-300 hover:border-blue-500 transition-colors duration-200 ${
+                  selectedGenders.includes(year)
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-gray-700"
+                }`}
+                onClick={() => handleYearClick(year)}
+              >
+                {year}
+              </div>
+            ))}
           </div>
         </div>
         <div className="flex flex-col items-center px-4 ">
@@ -81,13 +117,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
                     ? "bg-blue-500 text-white"
                     : "bg-white text-gray-700"
                 }`}
-                onClick={() =>
-                  setSelectedCategories((prev) =>
-                    prev.includes(category)
-                      ? prev.filter((c) => c !== category)
-                      : [...prev, category]
-                  )
-                }
+                onClick={() => handleCategoryClick(category)}
               >
                 {category}
               </div>
@@ -97,13 +127,16 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
 
         <div className="flex justify-center items-center p-4 border-t border-gray-200">
           <div
-            className="w-1/2 py-3 bg-white rounded border border-gray-300 text-gray-500 hover:border-blue-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer mr-4"
+            className="w-1/2 py-3 bg-white rounded border border-gray-300 mr-4
+            text-gray-500 text-center 
+            hover:border-blue-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer "
             onClick={handleResetFilters}
           >
             초기화
           </div>
           <div
-            className="w-1/2 py-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
+            className="w-1/2 py-3 bg-blue-500 text-white text-center rounded 
+            hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
             onClick={toggleFilter}
           >
             적용
