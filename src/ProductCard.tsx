@@ -10,7 +10,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { 상품코드, 칼라, 판매가 } = product;
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const colors = 칼라.join(", "); // 칼라 배열을 문자열로 변환
   const openModal: () => void = () => setIsOpen(true);
   const closeModal: () => void = () => setIsOpen(false);
 
