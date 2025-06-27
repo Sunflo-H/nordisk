@@ -35,7 +35,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
   };
 
   const handleYearClick = (year: string) => {
-    setSelectedGenders((prev) =>
+    setSelectedYears((prev) =>
       prev.includes(year) ? prev.filter((g) => g !== year) : [...prev, year]
     );
   };
@@ -72,7 +72,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
               <div
                 key={year}
                 className={`cursor-pointer px-4 py-2 rounded-full border border-gray-300 hover:border-blue-500 transition-colors duration-200 ${
-                  selectedGenders.includes(year)
+                  selectedYears.includes(year)
                     ? "bg-blue-500 text-white"
                     : "bg-white text-gray-700"
                 }`}
