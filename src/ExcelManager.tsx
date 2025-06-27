@@ -71,38 +71,6 @@ const ExcelManager = () => {
   );
 };
 
-function transformExcelData(dataList: MergedExcelDataType[]): ProductType[] {
-  const transformedDataList: ProductType[] = dataList.map((data) => {
-    const 상품코드 = data.상품코드;
-    const 성별코드 = 상품코드.charAt(1);
-    const 연도코드 = 상품코드.slice(3, 5);
-    const 카테고리코드 = 상품코드.charAt(5);
-
-    const 성별: string =
-      { M: "남성", W: "여성", U: "공용", X: "키즈" }[성별코드] || "기타";
-    const 연도: number = parseInt(연도코드, 10);
-    const 카테고리: string =
-      {
-        "1": "자켓",
-        "2": "티셔츠",
-        "3": "바지",
-        "4": "셔츠",
-        "5": "패딩",
-        N: "신발",
-        C: "모자",
-      }[카테고리코드] || "악세사리";
-
-    return {
-      상품코드,
-      상품명: data.상품명,
-      연도,
-      카테고리,
-      성별,
-      재고: data.재고,
-    };
-  });
-  return transformedDataList;
-}
 
 /** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
 function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
@@ -116,7 +84,7 @@ function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
       productMap.set(상품코드, {
         상품코드,
         상품명,
-        칼라,
+        칼라:[],
         판매가,
         재고: {},
       });
@@ -137,3 +105,41 @@ function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
 }
 
 export default ExcelManager;
+
+// mergedExcelData를 상품 데이터(연도, 카테고리, 성별 등)로 변환하는 함수
+function transformExcelData(mergedExcelDataList: MergedExcelDataType[]): ProductType[] {
+  const transformedDataList: ProductType[] = mergedExcelDataList.map((data) => {
+    const 상품코드 = data.상품코드;
+    const 성별코드 = 상품코드.charAt(1);
+    const 연도코드 = 상품코드.slice(3, 5);
+    const 카테고리코드 = 상품코드.charAt(5);
+
+    const 성별: string =
+      { M: "남성", W: "여성", U: "공용", X: "키즈" }[성별코드] || "기타";
+    const 연도: number = parseInt(연도코드, 10);
+    const 카테고리: string =
+      {
+        "1": "자켓",
+        "2": "티셔츠",
+        "3": "바지",
+        "4": "셔츠",
+        "5": "패딩",
+        N: "신발",
+        C: "모자",
+      }[카테고리코드] || "악세사리";
+    const 판매가 = data.판매가;
+    const 칼라 = Object.keys(data.재고);
+console.log('칼라',칼라);
+    return {
+      상품코드,
+      상품명: data.상품명,
+      연도,
+      카테고리,
+      성별,
+      칼라,
+      판매가,
+      재고: data.재고,
+    };
+  });
+  return transformedDataList;
+}

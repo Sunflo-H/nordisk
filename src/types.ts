@@ -27,6 +27,8 @@ export type ProductType = {
   연도: number;
   카테고리: string;
   성별: string;
+  판매가: number;
+  칼라:string[];
   재고: {
     [칼라: string]: {
       [key in SizeKey]: number;
@@ -53,8 +55,8 @@ export type UpdatedDataType = {
 export type MergedExcelDataType = {
   상품코드: string;
   상품명: string;
-  칼라: string;
   판매가: number;
+  칼라: string[];
   재고: {
     [칼라: string]: {
       [key in SizeKey]: number;
