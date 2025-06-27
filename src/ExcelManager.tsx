@@ -47,7 +47,7 @@ const ExcelManager = () => {
   };
 
   return (
-    <div className="flex justify-around">
+    <div className="flex justify-around mb-10 gap-4">
       <input
         type="file"
         accept=".xlsx, .xls"

@@ -16,7 +16,8 @@ function App() {
     <div className="max-w-[430px] mx-auto">
       <ExcelManager />
       <Filter />
-      <div className="grid grid-cols-3 gap-3 p-4">
+      {/* <div className="grid grid-cols-3 gap-3 p-4"> */}
+      <div className="">
         {productsData.map((product) => (
           <ProductCard product={product} key={product.상품코드} />
         ))}
