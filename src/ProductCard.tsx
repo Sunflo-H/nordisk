@@ -35,7 +35,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             ))}
           </div>
         </div>
-        <div className="text-lg text-blue-600 ">{판매가} 원</div>
+        <div className="text-lg text-blue-600 ">
+          {formatNumberWithCommas(판매가)} 원
+        </div>
       </div>
       {isOpen && <ProductModal product={product} onClose={closeModal} />}
     </>
@@ -43,3 +45,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 };
 
 export default ProductCard;
+
+function formatNumberWithCommas(num: number): string {
+  return num.toLocaleString("en-US");
+}
