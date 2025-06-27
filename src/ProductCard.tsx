@@ -21,7 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         onClick={openModal}
       >
         <div>
-          <div className="text-start">{상품코드}</div>
+          <div className="text-start text-base mb-1">{상품코드}</div>
           <div className="flex gap-1 text-start">
             {칼라.map((color, i) => (
               <span
