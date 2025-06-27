@@ -47,7 +47,7 @@ const ExcelManager = () => {
   };
 
   return (
-    <div className="flex justify-around mb-10 gap-4">
+    <div className="hidden sm:flex justify-around mb-10 gap-4 ">
       <input
         type="file"
         accept=".xlsx, .xls"
@@ -71,7 +71,6 @@ const ExcelManager = () => {
   );
 };
 
-
 /** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
 function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
   const productMap = new Map<string, MergedExcelDataType>();
@@ -84,7 +83,7 @@ function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
       productMap.set(상품코드, {
         상품코드,
         상품명,
-        칼라:[],
+        칼라: [],
         판매가,
         재고: {},
       });
@@ -107,7 +106,9 @@ function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
 export default ExcelManager;
 
 // mergedExcelData를 상품 데이터(연도, 카테고리, 성별 등)로 변환하는 함수
-function transformExcelData(mergedExcelDataList: MergedExcelDataType[]): ProductType[] {
+function transformExcelData(
+  mergedExcelDataList: MergedExcelDataType[]
+): ProductType[] {
   const transformedDataList: ProductType[] = mergedExcelDataList.map((data) => {
     const 상품코드 = data.상품코드;
     const 성별코드 = 상품코드.charAt(1);
@@ -129,7 +130,7 @@ function transformExcelData(mergedExcelDataList: MergedExcelDataType[]): Product
       }[카테고리코드] || "악세사리";
     const 판매가 = data.판매가;
     const 칼라 = Object.keys(data.재고);
-console.log('칼라',칼라);
+    console.log("칼라", 칼라);
     return {
       상품코드,
       상품명: data.상품명,
