@@ -17,7 +17,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <>
       {/* 카드 컨테이너 */}
       <div
-        className="flex justify-between items-center bg-white px-3 py-3 mb-2 shadow-md rounded-xl text-sm sm:text-base font-semibold border border-gray-200 cursor-pointer"
+        className="flex justify-between items-center w-full bg-white 
+        px-3 py-3 mb-2 shadow-md rounded-xl 
+        text-sm sm:text-base font-semibold border border-gray-200 cursor-pointer"
         onClick={openModal}
       >
         <div>

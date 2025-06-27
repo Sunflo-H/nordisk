@@ -13,14 +13,19 @@ function App() {
     readData(setProductsData);
   }, []);
   return (
-    <div className="max-w-[430px] mx-auto">
-      <ExcelManager />
-      <Filter />
-      {/* <div className="grid grid-cols-3 gap-3 p-4"> */}
-      <div className="">
-        {productsData.map((product) => (
-          <ProductCard product={product} key={product.상품코드} />
-        ))}
+    <div className="bg-gray-50 ">
+      <div className="max-w-[320px] m-auto ">
+        <ExcelManager />
+
+        <header className="text-2xl font-bold mb-4 p-1">
+          노르디스크 재고 관리
+        </header>
+        <Filter />
+        <main className="">
+          {productsData.map((product) => (
+            <ProductCard product={product} key={product.상품코드} />
+          ))}
+        </main>
       </div>
     </div>
   );
