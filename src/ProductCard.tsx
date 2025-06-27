@@ -17,22 +17,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <>
       {/* 카드 컨테이너 */}
       <div
-        className="flex flex-row justify-between items-center bg-white p-4 mb-4 shadow-md rounded-xl   text-lg font-semibold border border-gray-200 cursor-pointer"
+        className="flex flex-row justify-between items-center bg-white px-1 py-3 mb-2 shadow-md rounded-xl text-sm sm:text-base font-semibold border border-gray-200 cursor-pointer"
         onClick={openModal}
       >
         <div className="w-28">{상품코드}</div>
-        <div className={`flex gap-2 px-2 w-28`}>
+        <div className="grid grid-cols-2 gap-1 w-[53px] mr-2 text-start">
           {칼라.map((color, i) => (
             <span
               key={i}
-              className="text-xs bg-gray-100 text-gray-800 rounded-full text-center"
+              className="text-[10px] px-1 py-0.5 bg-gray-100 text-gray-800 rounded-full text-center"
             >
               {color}
             </span>
           ))}
         </div>
 
-        <div className="w-28 text-right text-blue-600">{판매가}원</div>
+        <div className="w-24 text-blue-600 ">{판매가} ₩</div>
       </div>
       {isOpen && <ProductModal product={product} onClose={closeModal} />}
     </>
