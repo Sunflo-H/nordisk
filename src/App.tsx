@@ -17,7 +17,7 @@ function App() {
       <div className="max-w-[320px] m-auto ">
         <ExcelManager />
 
-        <header className="text-2xl font-bold mb-4 p-1">
+        <header className="text-2xl font-bold mb-4 p-1 text-gray-800">
           노르디스크 재고 관리
         </header>
         <Filter />
