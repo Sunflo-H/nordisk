@@ -59,8 +59,8 @@
   margin-right: auto;
   transform: translate(0, 100%);
   width: 100vw;
-  max-width: 100vw;
-  min-width: 0;
+  max-width: 420px;
+  min-width: 320px;
   border-radius: 16px 16px 0 0;
   background-color: white;
   z-index: 11;
@@ -94,9 +94,7 @@
   .filter-overlay {
     padding: 4px !important;
     border-radius: 8px !important;
-  }
-  .filter-overlay-container {
     max-width: 100vw !important;
-    padding: 0 !important;
+    min-width: 0 !important;
   }
 }
