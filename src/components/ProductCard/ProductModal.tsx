@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { ProductType, SizeKey } from "./types";
+
 import StockModal from "./StockModal";
-import { updateData } from "./firebase/firebaseDatabase";
+import type { ProductType, SizeKey } from "../../types";
+import { updateData } from "../../firebase/firebaseDatabase";
 
 type ProductModalProps = {
   product: ProductType;
