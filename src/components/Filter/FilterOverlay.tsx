@@ -54,7 +54,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
   };
 
   return (
-    <div className="filter-overlay-container max-w-[430px] w-full">
+    <div className="filter-overlay-container max-w-[430px]">
       <div className={`filter-blackbox ${isActive ? "active" : ""}`}></div>
       <div className={`filter-overlay ${isActive ? "active" : ""}`}>
         <div className="flex items-center justify-between pt-6 pb-4 px-4 border-b border-gray-200 ">
