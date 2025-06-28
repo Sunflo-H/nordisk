@@ -28,7 +28,7 @@ export type ProductType = {
   카테고리: string;
   성별: string;
   판매가: number;
-  칼라:string[];
+  칼라: string[];
   재고: {
     [칼라: string]: {
       [key in SizeKey]: number;

@@ -27,9 +27,16 @@ const ExcelManager = () => {
       const excelDataList = XLSX.utils
         .sheet_to_json(sheet)
         .slice(1, -1) as ExcelDataType[];
-      const mergedDataList = mergeExcelData(excelDataList);
-
+      // 엑셀데이터에 아직 엑셀에 있는 불필요한 데이터들이 있다. 그걸 없앤 데이터
+      const filteredDataList = excelDataList.map((data) => {
+        return Object.fromEntries(
+          Object.entries(data).filter(([key]) => allowedKeys.includes(key))
+        );
+      }) as ExcelDataType[];
+      const mergedDataList = mergeExcelData(filteredDataList);
+      // console.log("mergedDataList", mergedDataList);
       const productDataList = transformExcelData(mergedDataList);
+      // console.log("productDataList", productDataList);
       saveToFirebase(productDataList);
     };
 
@@ -71,13 +78,23 @@ const ExcelManager = () => {
   );
 };
 
+export default ExcelManager;
+
+const allowedKeys = [
+  ...Array.from({ length: 20 }, (_, i) => i.toString().padStart(2, "0")), // "00" ~ "19"
+  "상품명",
+  "상품코드",
+  "칼라",
+  "판매가",
+  "재고",
+];
+
 /** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
 function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
   const productMap = new Map<string, MergedExcelDataType>();
 
   excelRows.forEach((row) => {
     const { 상품코드, 상품명, 칼라, 재고, 판매가, ...sizes } = row;
-
     // 상품코드로 기존 데이터가 있는지 확인
     if (!productMap.has(상품코드)) {
       productMap.set(상품코드, {
@@ -102,8 +119,6 @@ function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
   const result = Array.from(productMap.values());
   return result;
 }
-
-export default ExcelManager;
 
 // mergedExcelData를 상품 데이터(연도, 카테고리, 성별 등)로 변환하는 함수
 function transformExcelData(
@@ -130,7 +145,6 @@ function transformExcelData(
       }[카테고리코드] || "악세사리";
     const 판매가 = data.판매가;
     const 칼라 = Object.keys(data.재고);
-    console.log("칼라", 칼라);
     return {
       상품코드,
       상품명: data.상품명,
