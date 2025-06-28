@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SizeKey } from "./types";
+import type { SizeKey } from "../../types";
 
 type StockModalProps = {
   size: SizeKey;
