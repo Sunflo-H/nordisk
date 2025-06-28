@@ -1,6 +1,7 @@
 import { useState } from "react";
+
+import type { ProductType } from "../../types";
 import ProductModal from "./ProductModal";
-import type { ProductType } from "./types";
 
 type ProductCardProps = {
   product: ProductType;

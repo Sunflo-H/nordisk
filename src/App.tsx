@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import "./Filter.css";
-import ProductCard from "./ProductCard";
-import ExcelManager from "./ExcelManager";
 import { readData } from "./firebase/firebaseDatabase";
 import type { ProductType } from "./types";
-import Filter from "./Filter";
+import Filter from "./components/Filter/Filter";
+import ExcelManager from "./components/ExcelManager/ExcelManager";
+import ProductCard from "./components/ProductCard/ProductCard";
 
 function App() {
   const [productsData, setProductsData] = useState<ProductType[]>([]);

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+/* 다크모드를 수동화 시키는 코드라는데 아직 확인 못해봄 (tailwindcss V4는 다크모드가 자동임) */
 @custom-variant dark (&:where(.dark, .dark *));
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
