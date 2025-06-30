@@ -1,6 +1,7 @@
 import { useState } from "react";
 import FilterToggleBtn from "./FilterToggleBtn";
 import FilterOverlay from "./FilterOverlay";
+import "./Filter.css";
 
 type FilterProps = {};
 <div className="filter-container"></div>;

@@ -64,7 +64,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
           </div>
         </div>
         <div className="flex flex-col items-center px-4 ">
-          <div className="w-full text-left text-xl font-bold pt-4 pb-3">
+          <div className="filter-title w-full text-left text-xl font-bold pt-4 pb-3">
             연도
           </div>
           <div className="flex w-full gap-2 flex-wrap pb-8 border-b border-gray-200">
@@ -84,7 +84,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
           </div>
         </div>
         <div className="flex flex-col items-center px-4 ">
-          <div className="w-full text-left text-xl font-bold pt-4 pb-3">
+          <div className="filter-titlew-full text-left text-xl font-bold pt-4 pb-3">
             성별
           </div>
           <div className="flex w-full gap-2 flex-wrap pb-8 border-b border-gray-200">
@@ -105,7 +105,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
         </div>
 
         <div className="flex flex-col items-center px-4 mt-2">
-          <div className="w-full text-left text-xl font-bold pt-4 pb-3">
+          <div className="filter-title w-full text-left text-xl font-bold pt-4 pb-3">
             상품 종류
           </div>
           <div className="flex w-full gap-2 flex-wrap pb-6 ">

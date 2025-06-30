@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import "./Filter.css";
 import { readData } from "./firebase/firebaseDatabase";
 import type { ProductType } from "./types";
 import Filter from "./components/Filter/Filter";
