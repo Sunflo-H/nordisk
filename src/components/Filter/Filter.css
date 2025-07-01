@@ -116,7 +116,7 @@
     display: none;
   }
 }
-@media (max-width: 450px) {
+/* @media (max-width: 450px) {
   .filter-overlay {
     padding: 4px !important;
     border-radius: 8px !important;
@@ -128,4 +128,4 @@
   .filter-title {
     display: none;
   }
-}
+} */
