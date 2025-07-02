@@ -56,9 +56,12 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
   return (
     <div className="max-w-100vw sm:max-w[320px]">
       <div className={`filter-blackbox ${isActive ? "active" : ""}`}></div>
-      <div className={`filter-overlay ${isActive ? "active" : ""}`}>
+      <div
+        className={`filter-overlay aw:bg-blue-500 ${isActive ? "active" : ""} 
+      `}
+      >
         <div className="flex items-center justify-between pt-6 pb-4 px-4 border-b border-gray-200 ">
-          <div className="font-bold text-2xl">상품 필터</div>
+          <div className=" font-bold text-2xl">상품 필터</div>
           <div className="cursor-pointer" onClick={toggleFilter}>
             <IoClose className=" font-bold text-4xl" />
           </div>

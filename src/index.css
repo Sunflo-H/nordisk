@@ -1,6 +1,11 @@
 @import "tailwindcss";
 /* 다크모드를 수동화 시키는 코드라는데 아직 확인 못해봄 (tailwindcss V4는 다크모드가 자동임) */
-@custom-variant dark (&:where(.dark, .dark *));
+/* @custom-variant dark (&:where(.dark, .dark *)); */
+@theme {
+  /* 사용할 때 --breakpoint-는 빼고  */
+  --breakpoint-aw: 22rem; /* 애플 워치용 : applewatch 로 사용하면 된다. */
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
