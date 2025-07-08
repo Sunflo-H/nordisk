@@ -2,10 +2,13 @@ import { useState } from "react";
 import FilterToggleBtn from "./FilterToggleBtn";
 import FilterOverlay from "./FilterOverlay";
 import "./Filter.css";
+import type { FilterOptionsType, ProductType } from "../../types";
 
-type FilterProps = {};
-<div className="filter-container"></div>;
-const Filter: React.FC<FilterProps> = () => {
+type FilterProps = {
+  setFilterOptions: React.Dispatch<React.SetStateAction<FilterOptionsType>>;
+};
+
+const Filter: React.FC<FilterProps> = ({ setFilterOptions }) => {
   const [isActive, setIsActive] = useState(false);
   const toggleFilter = () => {
     setIsActive(!isActive);
@@ -13,7 +16,11 @@ const Filter: React.FC<FilterProps> = () => {
   return (
     <div className="filter-container">
       <FilterToggleBtn isActive={isActive} toggleFilter={toggleFilter} />
-      <FilterOverlay isActive={isActive} toggleFilter={toggleFilter} />
+      <FilterOverlay
+        isActive={isActive}
+        toggleFilter={toggleFilter}
+        setFilterOptions={setFilterOptions}
+      />
     </div>
   );
 };

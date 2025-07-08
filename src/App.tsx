@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { readData } from "./firebase/firebaseDatabase";
-import type { ProductType } from "./types";
+import type { FilterOptionsType, ProductType } from "./types";
 import Filter from "./components/Filter/Filter";
 import ExcelManager from "./components/ExcelManager/ExcelManager";
 import ProductCard from "./components/ProductCard/ProductCard";
 
 function App() {
   const [productsData, setProductsData] = useState<ProductType[]>([]);
+  const [filterOptions, setFilterOptions] = useState<FilterOptionsType>({
+    year: "",
+    gender: "",
+    category: "",
+  });
   useEffect(() => {
     readData(setProductsData);
   }, []);
@@ -19,7 +24,7 @@ function App() {
         <header className="text-2xl font-bold mb-4 p-1 ">
           노르디스크 재고 관리
         </header>
-        <Filter />
+        <Filter setFilterOptions={setFilterOptions} />
         <main className="">
           {productsData.map((product) => (
             <ProductCard product={product} key={product.상품코드} />

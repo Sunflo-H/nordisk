@@ -63,3 +63,9 @@ export type MergedExcelDataType = {
     };
   };
 };
+
+export type FilterOptionsType = {
+  year: string;
+  gender: string;
+  category: string;
+};

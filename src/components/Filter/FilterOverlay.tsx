@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
+import type { FilterOptionsType } from "../../types";
 
 type FilterOverlayProps = {
   isActive: boolean;
   toggleFilter: () => void;
+  setFilterOptions: React.Dispatch<React.SetStateAction<FilterOptionsType>>;
 };
 
 const yearOptions = ["2025", "2024", "2023"];
@@ -21,6 +23,7 @@ const categoryOptions = [
 const FilterOverlay: React.FC<FilterOverlayProps> = ({
   isActive,
   toggleFilter,
+  setFilterOptions,
 }) => {
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
@@ -57,7 +60,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
     <div className="max-w-100vw sm:max-w[320px]">
       <div className={`filter-blackbox ${isActive ? "active" : ""}`}></div>
       <div
-        className={`filter-overlay aw:bg-blue-500 ${isActive ? "active" : ""} 
+        className={`filter-overlay ${isActive ? "active" : ""} 
       `}
       >
         <div className="flex items-center justify-between pt-6 pb-4 px-4 border-b border-gray-200 ">
