@@ -9,9 +9,9 @@ import ProductCard from "./components/ProductCard/ProductCard";
 function App() {
   const [productsData, setProductsData] = useState<ProductType[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptionsType>({
-    year: "",
-    gender: "",
-    category: "",
+    year: [],
+    gender: [],
+    category: [],
   });
   useEffect(() => {
     readData(setProductsData);
