@@ -11,14 +11,26 @@ type FilterOverlayProps = {
 const yearOptions = ["25", "24", "23"];
 const genderOptions = ["공용", "남성", "여성", "키즈"];
 const categoryOptions = [
-  "상의",
-  "하의",
   "자켓",
+  "티셔츠",
+  "바지",
   "셔츠",
   "패딩",
-  "장갑",
-  "신발",
+  "베스트",
+  "용품",
+  "스웨터",
+  "원피스",
+  "큐롯",
+  "등산화",
+  "일반 신발",
+  // "반팔티셔츠",
   "모자",
+  "장갑",
+  "양말",
+  "가방",
+  "캠핑용품",
+  "속옷",
+  "고어텍스",
 ];
 const FilterOverlay: React.FC<FilterOverlayProps> = ({
   isActive,

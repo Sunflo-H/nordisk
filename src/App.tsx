@@ -15,15 +15,17 @@ function App() {
     gender: [],
     category: [],
   });
-  // console.log("productsData", productsData);
+
   useEffect(() => {
     readData(setProductsData);
   }, []);
 
   useEffect(() => {
-    setFilteredProducts(getFilteredData(productsData, filterOptions));
+    const filteredData = getFilteredData(productsData, filterOptions);
+    setFilteredProducts(filteredData);
   }, [filterOptions]);
   console.log("filteredProducts", filteredProducts);
+
   return (
     <div className="bg-gray-50 text-gray-800">
       <div className="max-w-[320px] m-auto ">
