@@ -13,6 +13,8 @@ function saveToFirebase(productDataList: ProductType[]): void {
   });
 }
 
+// firebase에서 데이터를 가져와 productsData 상태를 업데이트하는 함수
+// 이 함수는 컴포넌트가 마운트될 때 호출되어야 합니다
 function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {
   get(child(dbRef, `product`))
     .then((snapshot) => {

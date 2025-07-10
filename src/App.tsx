@@ -5,7 +5,6 @@ import type { FilterOptionsType, ProductType } from "./types";
 import Filter from "./components/Filter/Filter";
 import ExcelManager from "./components/ExcelManager/ExcelManager";
 import ProductCard from "./components/ProductCard/ProductCard";
-import { set } from "firebase/database";
 
 function App() {
   const [productsData, setProductsData] = useState<ProductType[]>([]);
@@ -21,23 +20,8 @@ function App() {
     readData(setProductsData);
   }, []);
 
-  /**
-   * 남성만 클릭하면 남성 상품만 보여줘야지 = obj.성별 ==="남성"
-   * 남성과 여성 클릭하면 둘다 보여줘야지 = obj.성별 === "남성" || obj.성별 === "여성"
-   */
   useEffect(() => {
-    // 필터링 로직
-    const { year, gender, category } = filterOptions;
-    const result = productsData.filter((product) => {
-      const matchesYear =
-        year.length === 0 || year.includes(product.연도.toString());
-      const matchesGender =
-        gender.length === 0 || gender.includes(product.성별);
-      const matchesCategory =
-        category.length === 0 || category.includes(product.카테고리);
-      return matchesYear && matchesGender && matchesCategory;
-    });
-    setFilteredProducts(result);
+    setFilteredProducts(getFilteredData(productsData, filterOptions));
   }, [filterOptions]);
   console.log("filteredProducts", filteredProducts);
   return (
@@ -50,9 +34,13 @@ function App() {
         </header>
         <Filter setFilterOptions={setFilterOptions} />
         <main className="">
-          {filteredProducts.map((product) => (
-            <ProductCard product={product} key={product.상품코드} />
-          ))}
+          {filteredProducts.length > 0
+            ? filteredProducts.map((product) => (
+                <ProductCard product={product} key={product.상품코드} />
+              ))
+            : productsData.map((product) => (
+                <ProductCard product={product} key={product.상품코드} />
+              ))}
         </main>
       </div>
     </div>
@@ -60,3 +48,21 @@ function App() {
 }
 
 export default App;
+
+// 데이터와 필터 옵션을 받아 필터링한 데이터를 반환하는 함수
+function getFilteredData(
+  productsData: ProductType[],
+  filterOptions: FilterOptionsType
+) {
+  const { year, gender, category } = filterOptions;
+
+  const filterdData = productsData.filter((product) => {
+    const matchesYear =
+      year.length === 0 || year.includes(product.연도.toString());
+    const matchesGender = gender.length === 0 || gender.includes(product.성별);
+    const matchesCategory =
+      category.length === 0 || category.includes(product.카테고리);
+    return matchesYear && matchesGender && matchesCategory;
+  });
+  return filterdData;
+}
