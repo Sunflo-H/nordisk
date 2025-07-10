@@ -8,7 +8,7 @@ type FilterOverlayProps = {
   setFilterOptions: React.Dispatch<React.SetStateAction<FilterOptionsType>>;
 };
 
-const yearOptions = ["2025", "2024", "2023"];
+const yearOptions = ["25", "24", "23"];
 const genderOptions = ["공용", "남성", "여성", "키즈"];
 const categoryOptions = [
   "상의",
@@ -56,13 +56,14 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
     setSelectedCategories([]);
   };
 
-  useEffect(() => {
+  const handleActiveFIlter = () => {
     setFilterOptions({
       year: selectedYears,
       gender: selectedGenders,
       category: selectedCategories,
     });
-  }, [selectedYears, selectedGenders, selectedCategories]);
+    toggleFilter();
+  };
 
   return (
     <div className="max-w-100vw sm:max-w[320px]">
@@ -151,7 +152,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
           <div
             className="w-1/2 py-3 bg-blue-500 text-white text-center rounded 
             hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
-            onClick={toggleFilter}
+            onClick={handleActiveFIlter}
           >
             적용
           </div>
