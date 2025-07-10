@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import type { FilterOptionsType } from "../../types";
 
@@ -55,6 +55,14 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
     setSelectedGenders([]);
     setSelectedCategories([]);
   };
+
+  useEffect(() => {
+    setFilterOptions({
+      year: selectedYears,
+      gender: selectedGenders,
+      category: selectedCategories,
+    });
+  }, [selectedYears, selectedGenders, selectedCategories]);
 
   return (
     <div className="max-w-100vw sm:max-w[320px]">

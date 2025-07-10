@@ -16,6 +16,7 @@ function App() {
   useEffect(() => {
     readData(setProductsData);
   }, []);
+  console.log("filterOptions", filterOptions);
   return (
     <div className="bg-gray-50 text-gray-800">
       <div className="max-w-[320px] m-auto ">
