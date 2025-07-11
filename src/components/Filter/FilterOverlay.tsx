@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
 import type { FilterOptionsType } from "../../types";
+import FilterOption from "./FilterOption";
 
 type FilterOverlayProps = {
   isActive: boolean;
@@ -29,8 +30,8 @@ const categoryOptions = [
   "양말",
   "가방",
   "캠핑용품",
-  "속옷",
-  "고어텍스",
+  // "속옷",
+  // "고어텍스",
 ];
 const FilterOverlay: React.FC<FilterOverlayProps> = ({
   isActive,
@@ -41,31 +42,10 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  const handleGenderClick = (gender: string) => {
-    setSelectedGenders((prev) =>
-      prev.includes(gender)
-        ? prev.filter((g) => g !== gender)
-        : [...prev, gender]
-    );
-  };
-
-  const handleYearClick = (year: string) => {
-    setSelectedYears((prev) =>
-      prev.includes(year) ? prev.filter((g) => g !== year) : [...prev, year]
-    );
-  };
-
-  const handleCategoryClick = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
-    );
-  };
-
   const handleResetFilters = () => {
     setSelectedGenders([]);
     setSelectedCategories([]);
+    setSelectedYears([]);
   };
 
   const handleActiveFIlter = () => {
@@ -90,69 +70,27 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
             <IoClose className=" font-bold text-4xl" />
           </div>
         </div>
-        <div className="flex flex-col items-center px-4 ">
-          <div className="filter-title w-full text-left text-xl font-bold pt-4 pb-3">
-            연도
-          </div>
-          <div className="flex w-full gap-2 flex-wrap pb-8 border-b border-gray-200">
-            {yearOptions.map((year) => (
-              <div
-                key={year}
-                className={`cursor-pointer px-4 py-2 rounded-full border border-gray-300 hover:border-blue-500 transition-colors duration-200 ${
-                  selectedYears.includes(year)
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700"
-                }`}
-                onClick={() => handleYearClick(year)}
-              >
-                {year}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col items-center px-4 ">
-          <div className="filter-title w-full text-left text-xl font-bold pt-4 pb-3">
-            성별
-          </div>
-          <div className="flex w-full gap-2 flex-wrap pb-8 border-b border-gray-200">
-            {genderOptions.map((gender) => (
-              <div
-                key={gender}
-                className={`cursor-pointer px-4 py-2 rounded-full border border-gray-300 hover:border-blue-500 transition-colors duration-200 ${
-                  selectedGenders.includes(gender)
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700"
-                }`}
-                onClick={() => handleGenderClick(gender)}
-              >
-                {gender}
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="flex flex-col items-center px-4 mt-2">
-          <div className="filter-title w-full text-left text-xl font-bold pt-4 pb-3">
-            상품 종류
-          </div>
-          <div className="flex w-full gap-2 flex-wrap pb-6 ">
-            {categoryOptions.map((category) => (
-              <div
-                key={category}
-                className={`cursor-pointer px-4 py-2 rounded-full border border-gray-300 hover:border-blue-500 transition-colors duration-200 ${
-                  selectedCategories.includes(category)
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700"
-                }`}
-                onClick={() => handleCategoryClick(category)}
-              >
-                {category}
-              </div>
-            ))}
-          </div>
-        </div>
+        <FilterOption
+          title="연도"
+          options={yearOptions}
+          selectedOptions={selectedYears}
+          setSelectedOptions={setSelectedYears}
+        />
+        <FilterOption
+          title="성별"
+          options={genderOptions}
+          selectedOptions={selectedGenders}
+          setSelectedOptions={setSelectedGenders}
+        />
+        <FilterOption
+          title="카테고리"
+          options={categoryOptions}
+          selectedOptions={selectedCategories}
+          setSelectedOptions={setSelectedCategories}
+        />
 
-        <div className="flex justify-center items-center p-4 border-t border-gray-200">
+        <div className="flex justify-center items-center p-4 ">
           <div
             className="w-1/2 py-3 bg-white rounded border border-gray-300 mr-4
             text-gray-500 text-center 
