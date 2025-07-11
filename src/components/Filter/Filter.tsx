@@ -2,7 +2,7 @@ import { useState } from "react";
 import FilterToggleBtn from "./FilterToggleBtn";
 import FilterOverlay from "./FilterOverlay";
 import "./Filter.css";
-import type { FilterOptionsType, ProductType } from "../../types";
+import type { FilterOptionsType } from "../../types";
 
 type FilterProps = {
   setFilterOptions: React.Dispatch<React.SetStateAction<FilterOptionsType>>;
