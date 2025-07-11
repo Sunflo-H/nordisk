@@ -27,14 +27,12 @@ function App() {
   console.log("filteredProducts", filteredProducts);
 
   return (
-    <div className="bg-gray-50 text-gray-800">
+    <div className="bg-gray-50 text-gray-800 h-100vh">
       <div className="max-w-[320px] m-auto ">
         <ExcelManager />
-
         <header className="text-2xl font-bold mb-4 p-1 ">
           노르디스크 재고 관리
         </header>
-        <Filter setFilterOptions={setFilterOptions} />
         <main className="">
           {filteredProducts.length > 0
             ? filteredProducts.map((product) => (
@@ -44,6 +42,7 @@ function App() {
                 <ProductCard product={product} key={product.상품코드} />
               ))}
         </main>
+        <Filter setFilterOptions={setFilterOptions} />
       </div>
     </div>
   );
