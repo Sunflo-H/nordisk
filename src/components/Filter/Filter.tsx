@@ -14,7 +14,7 @@ const Filter: React.FC<FilterProps> = ({ setFilterOptions }) => {
     setIsActive(!isActive);
   };
   return (
-    <div className="filter-container">
+    <div className="">
       <FilterToggleBtn isActive={isActive} toggleFilter={toggleFilter} />
       <FilterOverlay
         isActive={isActive}

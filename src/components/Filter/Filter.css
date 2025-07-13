@@ -2,35 +2,6 @@
   --filter-main-color: rgb(1 115 250);
   --filter-text-color: #202632;
 }
-/* 초기 상태: 동그란 버튼 */
-.filter-toggle {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  padding-top: 5px;
-  border-radius: 50%;
-  background-color: var(--filter-main-color);
-  border: none;
-  z-index: 10;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.filter-toggle.active {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.filter-icon {
-  width: 30px;
-  height: 30px;
-  color: white;
-}
 
 /* 블랙박스: 필터 오버레이 아래에 깔리는 검은 배경 */
 .filter-blackbox {
@@ -98,7 +69,7 @@
     min-width: 0 !important;
   }
 
-  .filter-title {
+  /* .filter-title {
     display: none;
-  }
+  } */
 }

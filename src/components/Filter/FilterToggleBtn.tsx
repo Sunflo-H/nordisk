@@ -12,10 +12,18 @@ const FilterToggleBtn: React.FC<FilterToggleBtnProps> = ({
 }) => {
   return (
     <div
-      className={`filter-toggle ${isActive ? "active" : ""} `}
+      className={`
+        fixed bottom-3 right-3
+        flex justify-center items-center
+        w-16 h-16 pt-2 
+        rounded-full 
+        bg-blue-500 
+        z-10 cursor-pointer 
+        transition-all duration-300 ease-in-out 
+        ${isActive ? "opacity-0 pointer-none" : ""} `}
       onClick={toggleFilter}
     >
-      <FiFilter className="filter-icon" />
+      <FiFilter className="w-[30px] h-[30px] text-white" />
     </div>
   );
 };
