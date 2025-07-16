@@ -3,34 +3,6 @@
   --filter-text-color: #202632;
 }
 
-/* 오버레이: 기본은 숨겨짐 */
-.filter-overlay {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin-left: auto;
-  margin-right: auto;
-  transform: translate(0, 100%);
-  width: 100vw;
-  max-width: 420px;
-  min-width: 320px;
-  max-height: 100%;
-  border-radius: 16px 16px 0 0;
-  background-color: white;
-  z-index: 20;
-  overflow: scroll;
-  pointer-events: none;
-  opacity: 1;
-  transition: all 0.5s ease;
-}
-
-.filter-overlay.active {
-  transform: translateY(0%);
-  pointer-events: auto;
-  opacity: 1;
-}
-
 /* 모바일(최대 600px)에서는 더 작은 크기 적용 */
 @media (max-width: 600px) {
   .filter-toggle {

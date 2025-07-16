@@ -62,7 +62,19 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
     <div className="max-w-100vw sm:max-w[320px]">
       <FIlterBlackBox isActive={isActive} />
       <div
-        className={`filter-overlay ${isActive ? "active" : ""} 
+        className={`fixed bottom-0 left-0 right-0
+          w-screen max-w-[420px] min-w-[320px] max-h-screen
+          m-auto
+          bg-white
+          rounded-t-2xl
+          shadow-lg
+          z-20
+          transition-transform duration-300 ease-in-out
+          ${
+            isActive
+              ? "translate-y-0 pointer-events-auto"
+              : "translate-y-full pointer-events-auto"
+          }
       `}
       >
         <div className="flex items-center justify-between pt-6 pb-4 px-4 border-b border-gray-200 ">
