@@ -15,9 +15,9 @@ const FilterToggleBtn: React.FC<FilterToggleBtnProps> = ({
       className={`
         fixed bottom-3 right-3
         flex justify-center items-center
-        w-16 h-16 pt-2 
-        rounded-full 
+        w-14 h-14 pt-2 
         bg-blue-500 
+        rounded-full 
         z-10 cursor-pointer 
         transition-all duration-300 ease-in-out 
         ${isActive ? "opacity-0 pointer-none" : ""} `}
