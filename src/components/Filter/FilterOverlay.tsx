@@ -59,7 +59,18 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
 
   return (
     <div className="max-w-100vw sm:max-w[320px]">
-      <div className={`filter-blackbox ${isActive ? "active" : ""}`}></div>
+      {/* filter-blackbox : 모달 검은 배경 */}
+      <div
+        className={`
+    fixed top-0 left-0 w-screen h-screen z-[20]
+    transition-all duration-500 ease-in-out
+    ${
+      isActive
+        ? "pointer-events-auto bg-black/50"
+        : "pointer-events-none bg-transparent"
+    }
+  `}
+      ></div>
       <div
         className={`filter-overlay ${isActive ? "active" : ""} 
       `}

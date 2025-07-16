@@ -3,23 +3,6 @@
   --filter-text-color: #202632;
 }
 
-/* 블랙박스: 필터 오버레이 아래에 깔리는 검은 배경 */
-.filter-blackbox {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 8;
-  pointer-events: none;
-  transition: all 0.5s ease;
-}
-
-.filter-blackbox.active {
-  pointer-events: auto;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
 /* 오버레이: 기본은 숨겨짐 */
 .filter-overlay {
   position: fixed;
