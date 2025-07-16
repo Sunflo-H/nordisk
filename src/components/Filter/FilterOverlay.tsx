@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
 import type { FilterOptionsType } from "../../types";
 import FilterOption from "./FilterOption";
+import FIlterBlackBox from "./FilterBlackBox";
 
 type FilterOverlayProps = {
   isActive: boolean;
@@ -59,18 +60,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
 
   return (
     <div className="max-w-100vw sm:max-w[320px]">
-      {/* filter-blackbox : 모달 검은 배경 */}
-      <div
-        className={`
-    fixed top-0 left-0 w-screen h-screen z-[20]
-    transition-all duration-500 ease-in-out
-    ${
-      isActive
-        ? "pointer-events-auto bg-black/50"
-        : "pointer-events-none bg-transparent"
-    }
-  `}
-      ></div>
+      <FIlterBlackBox isActive={isActive} />
       <div
         className={`filter-overlay ${isActive ? "active" : ""} 
       `}
