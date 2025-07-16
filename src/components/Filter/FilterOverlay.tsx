@@ -93,16 +93,22 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
 
         <div className="flex justify-center items-center p-4 ">
           <div
-            className="w-1/2 py-3 bg-white rounded border border-gray-300 mr-4
-            text-gray-500 text-center 
-            hover:border-blue-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer "
+            className="w-1/2 py-3 mr-4
+            bg-white
+            text-gray-500 text-center  
+            rounded border border-gray-300 
+            transition-colors duration-200 cursor-pointer 
+            hover:border-blue-600 hover:text-blue-500 "
             onClick={handleResetFilters}
           >
             초기화
           </div>
           <div
-            className="w-1/2 py-3 bg-blue-500 text-white text-center rounded 
-            hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
+            className="w-1/2 py-3 
+            bg-blue-500 
+            text-white text-center rounded 
+            transition-colors duration-200 cursor-pointer
+            hover:bg-blue-600"
             onClick={handleActiveFIlter}
           >
             적용
