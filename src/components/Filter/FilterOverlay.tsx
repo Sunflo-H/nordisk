@@ -64,19 +64,21 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
       <div
         className={`
           fixed bottom-0 left-0 right-0
-          w-screen max-w-[420px] min-w-[320px] max-h-screen
+          w-screen max-w-screen min-w-0 max-h-screen
+          aw:max-w-[420px] aw:min-w-[320px]
           m-auto
+          aw:p-[4px]? 
           bg-white
           rounded-t-2xl
           shadow-lg
           z-20
           transition-transform duration-300 ease-in-out
+          overflow-scroll
           ${
             isActive
               ? "translate-y-0 pointer-events-auto"
               : "translate-y-full pointer-events-auto"
           }
-          aw:p-[4px] aw:max-w-screen aw:min-w-0
       `}
       >
         <div className="flex items-center justify-between pt-6 pb-4 px-4 border-b border-gray-200 ">
