@@ -25,10 +25,11 @@ const FilterOption: React.FC<FilterOptionProps> = ({
         {options.map((option) => (
           <div
             key={option}
-            className={` px-3 py-1 
+            className={` px-4 py-2 aw:px-3 aw:py-1
                 rounded-full border border-gray-300 hover:border-blue-500 
                 transition-colors duration-200 
                 cursor-pointer
+                
                 ${
                   selectedOptions.includes(option)
                     ? "bg-blue-500 text-white"
