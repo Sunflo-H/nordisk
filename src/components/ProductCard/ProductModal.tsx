@@ -3,6 +3,7 @@ import { useState } from "react";
 // import StockModal from "./StockModal";
 import type { ProductType, SizeKey } from "../../types";
 import { updateData } from "../../firebase/firebaseDatabase";
+import { IoClose } from "react-icons/io5";
 
 type ProductModalProps = {
   product: ProductType;
@@ -55,20 +56,28 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white p-6 rounded-lg w-[90%] max-w-[600px] overflow-auto max-h-[90vh]">
+      <div className="p-6 rounded-lg w-[90%] max-w-[600px] max-h-[90vh] bg-white overflow-auto ">
         <div className="flex justify-between items-center">
           <h2 className="w-40 text-xl font-bold">{product.상품코드}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-black">
-            ✕
+
+          <button
+            onClick={onClose}
+            className="text-black hover:text-blue-600 cursor-pointer"
+          >
+            <IoClose className=" font-bold text-4xl" />
           </button>
         </div>
-        <div className="flex mb-4">
+        <div className="flex gap-1">
           {sortedColor.map((color) => (
             <h2
               key={color}
               onClick={() => handleChangeColor(color)}
-              className={`${selectedColor === color ? "bg-black" : ""}
-            font-bold w-20 border cursor-pointer `}
+              className={`w-14 py-1 rounded-t-lg font-bold text-center cursor-pointer 
+                ${
+                  selectedColor === color
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-500"
+                }`}
             >
               {color}
             </h2>
@@ -91,7 +100,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                     handleOpenStockModal(i);
                   }}
                   className={`cursor-pointer ${
-                    selectedSizeIndex === i ? "bg-orange-100 " : ""
+                    selectedSizeIndex === i ? "bg-blue-100 " : ""
                   }`}
                 >
                   <td className="px-4 py-2 text-center">{size}</td>
