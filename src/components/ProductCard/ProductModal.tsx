@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import StockModal from "./StockModal";
+// import StockModal from "./StockModal";
 import type { ProductType, SizeKey } from "../../types";
 import { updateData } from "../../firebase/firebaseDatabase";
 
@@ -37,7 +37,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(
     null
   );
-  const [updatedProduct, setUpdatedProduct] = useState<ProductType>(product);
   let sortedColor = Object.keys(product.재고).sort();
   const first_color_key = sortedColor[0];
   const [selectedColor, setSelectedColor] = useState<string>(first_color_key);
@@ -48,44 +47,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     selectedSizeIndex === index
       ? setSelectedSizeIndex(null)
       : setSelectedSizeIndex(index);
-  };
-
-  const handleCloseStockModal: () => void = () => {
-    setSelectedSizeIndex(null);
-    setUpdatedProduct(productState);
-  };
-
-  const handleSave: () => void = () => {
-    updateData(updatedProduct);
-    setProductState(updatedProduct);
-    setSelectedSizeIndex(null);
-  };
-
-  const handleIncrease: (size: SizeKey) => void = (size) => {
-    setUpdatedProduct((prev) => ({
-      ...prev,
-      재고: {
-        ...prev.재고,
-        [selectedColor]: {
-          ...prev.재고[selectedColor],
-          [size]: prev.재고[selectedColor][size] + 1,
-        },
-      },
-    }));
-  };
-
-  const handleDecrease: (size: SizeKey) => void = (size) => {
-    if (updatedProduct.재고[selectedColor][size] === 0) return;
-    setUpdatedProduct((prev) => ({
-      ...prev,
-      재고: {
-        ...prev.재고,
-        [selectedColor]: {
-          ...prev.재고[selectedColor],
-          [size]: prev.재고[selectedColor][size] - 1,
-        },
-      },
-    }));
   };
 
   const handleChangeColor: (color: string) => void = (color) => {
@@ -141,20 +102,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               ))}
             </tbody>
           </table>
-          {selectedSizeIndex !== null ? (
-            <StockModal
-              size={sizeList[selectedSizeIndex]}
-              qty={
-                updatedProduct.재고[selectedColor][sizeList[selectedSizeIndex]]
-              }
-              onIncrease={handleIncrease}
-              onDecrease={handleDecrease}
-              onSave={handleSave}
-              onClose={handleCloseStockModal}
-            />
-          ) : (
-            ""
-          )}
         </div>
       </div>
     </div>
