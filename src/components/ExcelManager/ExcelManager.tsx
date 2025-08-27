@@ -38,6 +38,7 @@ const ExcelManager = () => {
       const productDataList = transformExcelData(mergedDataList);
       // console.log("productDataList", productDataList);
       saveToFirebase(productDataList);
+      console.log("productDataList", productDataList);
     };
 
     reader.readAsBinaryString(file);
