@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { readData } from "./firebase/firebaseDatabase";
 import type { FilterOptionsType, ProductType } from "./types";
