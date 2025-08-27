@@ -13,7 +13,7 @@ const ExcelManager = () => {
   // 엑셀 파일을 읽고 데이터를 변환 후 파이어베이스에 저장한다.
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) return; // 파일이 없으면 종료
     const reader = new FileReader();
     reader.onload = (evt: ProgressEvent<FileReader>) => {
       const binaryStr = evt.target?.result;
@@ -27,7 +27,7 @@ const ExcelManager = () => {
       const excelDataList = XLSX.utils
         .sheet_to_json(sheet)
         .slice(1, -1) as ExcelDataType[];
-      // 엑셀데이터에 아직 엑셀에 있는 불필요한 데이터들이 있다. 그걸 없앤 데이터
+      // 엑셀데이터에서 수선중, 이동중, 출고가 등 불필요한 속성을 제거한 데이터
       const filteredDataList = excelDataList.map((data) => {
         return Object.fromEntries(
           Object.entries(data).filter(([key]) => allowedKeys.includes(key))
