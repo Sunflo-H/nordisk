@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { readData } from "./firebase/firebaseDatabase";
 import type { FilterOptionsType, ProductType } from "./types";
@@ -22,9 +22,12 @@ function App() {
 
   useEffect(() => {
     const filteredData = getFilteredData(productsData, filterOptions);
+
+    if (filteredData.length === 0 && productsData.length > 0)
+      alert("해당하는 필터 옵션의 상품이 없습니다. 다시 선택해주세요.");
+
     setFilteredProducts(filteredData);
-  }, [filterOptions]);
-  console.log("filteredProducts", filteredProducts);
+  }, [filterOptions, productsData]);
 
   return (
     <div className="bg-gray-50 text-gray-800 h-100vh">
@@ -57,7 +60,7 @@ function getFilteredData(
 ) {
   const { year, gender, category } = filterOptions;
 
-  const filterdData = productsData.filter((product) => {
+  const filteredData = productsData.filter((product) => {
     const matchesYear =
       year.length === 0 || year.includes(product.연도.toString());
     const matchesGender = gender.length === 0 || gender.includes(product.성별);
@@ -65,5 +68,9 @@ function getFilteredData(
       category.length === 0 || category.includes(product.카테고리);
     return matchesYear && matchesGender && matchesCategory;
   });
-  return filterdData;
+
+  // if (filteredData.length === 0)
+  //   alert("해당하는 필터 옵션의 상품이 없습니다. 다시 선택해주세요.");
+  // else return filteredData;
+  return filteredData;
 }
