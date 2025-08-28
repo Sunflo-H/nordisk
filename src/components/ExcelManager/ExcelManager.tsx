@@ -51,7 +51,12 @@ const ExcelManager = () => {
   };
 
   const handleDeleteAllProducts = () => {
-    deleteData();
+    if (confirm("정말 모든 상품 데이터를 삭제하시겠습니까?")) {
+      alert("정상적으로 모든 상품 데이터를 삭제했습니다.");
+      deleteData();
+    } else {
+      alert("취소했습니다.");
+    }
   };
 
   return (
