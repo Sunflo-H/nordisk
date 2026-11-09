@@ -3,7 +3,6 @@ import "./App.css";
 import { readData } from "./firebase/firebaseDatabase";
 import type { FilterOptionsType, ProductType } from "./types";
 import Filter from "./components/Filter/Filter";
-import ExcelManager from "./components/ExcelManager/ExcelManager";
 import ProductCard from "./components/ProductCard/ProductCard";
 
 function App() {
@@ -32,7 +31,6 @@ function App() {
   return (
     <div className="bg-gray-50 text-gray-800 h-100vh">
       <div className="max-w-[320px] m-auto ">
-        <ExcelManager />
         <header className="text-2xl font-bold mb-4 p-1 ">
           노르디스크 재고 관리
         </header>
