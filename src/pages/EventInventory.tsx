@@ -1,5 +1,6 @@
 import { useState } from "react";
 import EventProductPicker from "../components/EventEditor/EventProductPicker";
+import PageHeader from "../components/PageHeader/PageHeader";
 import ProductListView from "../components/ProductList/ProductListView";
 import {
   clearEventProductCodes,
@@ -77,9 +78,7 @@ const EventInventory = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
-      <div className="max-w-[1200px] m-auto px-4 pt-8">
-        <header className="text-2xl font-bold text-center">행사장 재고 관리</header>
-      </div>
+      <PageHeader title="행사장 재고 관리" />
       {/* 상품 선택 영역 (PC 전용). 행사장 목록을 제대로 읽은 뒤에만 보여 줘야
           읽기 실패 시 빈 목록으로 덮어쓰는 일이 없다. */}
       {isLoaded && !errorMessage && (

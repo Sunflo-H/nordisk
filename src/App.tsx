@@ -1,4 +1,5 @@
 import "./App.css";
+import PageHeader from "./components/PageHeader/PageHeader";
 import ProductListView from "./components/ProductList/ProductListView";
 import useProducts from "./hooks/useProducts";
 
@@ -7,11 +8,9 @@ function App() {
   const productsData = useProducts();
 
   return (
-    <div className="bg-gray-50 text-gray-800 h-100vh">
-      <div className="max-w-[320px] m-auto ">
-        <header className="text-2xl font-bold text-center mb-4 p-1">
-          노르디스크 재고 관리
-        </header>
+    <div className="min-h-screen bg-gray-50 text-gray-800">
+      <PageHeader title="노르디스크 재고 관리" />
+      <div className="max-w-[320px] m-auto mt-6">
         <ProductListView products={productsData} />
       </div>
     </div>
