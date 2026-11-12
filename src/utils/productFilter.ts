@@ -43,3 +43,42 @@ export function getFilteredData(
     return matchesYear && matchesGender && matchesCategory;
   });
 }
+
+// 필터 항목별로 상품에서 비교할 값을 꺼내는 함수
+const getProductValue: Record<
+  keyof FilterOptionsType,
+  (product: ProductType) => string
+> = {
+  year: (product) => product.연도.toString(),
+  gender: (product) => product.성별,
+  category: (product) => product.카테고리,
+};
+
+// 필터 항목(연도/성별/카테고리) 하나에 대해 값별 상품 수를 센다.
+// 다른 칩 선택과 상관없이 넘겨받은 상품 전체 기준의 고정 개수다.
+export function countProductsByOption(
+  productsData: ProductType[],
+  key: keyof FilterOptionsType
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const product of productsData) {
+    const value = getProductValue[key](product);
+    counts[value] = (counts[value] ?? 0) + 1;
+  }
+  return counts;
+}
+
+// 고른 칩 개수 합계 (필터 버튼 배지에 쓴다)
+export function countSelectedOptions(filterOptions: FilterOptionsType) {
+  return (
+    filterOptions.year.length +
+    filterOptions.gender.length +
+    filterOptions.category.length
+  );
+}
+
+export const emptyFilterOptions: FilterOptionsType = {
+  year: [],
+  gender: [],
+  category: [],
+};

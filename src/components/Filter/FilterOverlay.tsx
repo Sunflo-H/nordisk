@@ -1,47 +1,52 @@
-import React, { useState } from "react";
+import React from "react";
 import { IoClose } from "react-icons/io5";
 import type { FilterOptionsType } from "../../types";
 import FilterOption from "./FilterOption";
 import FIlterBlackBox from "./FilterBlackBox";
+import type { FilterOptionCounts } from "./Filter";
 import {
   categoryOptions,
+  emptyFilterOptions,
   genderOptions,
   yearOptions,
 } from "../../utils/productFilter";
 
 type FilterOverlayProps = {
   isActive: boolean;
-  toggleFilter: () => void;
-  setFilterOptions: React.Dispatch<React.SetStateAction<FilterOptionsType>>;
+  // 적용 없이 닫기 (X·어두운 배경)
+  closeFilter: () => void;
+  applyFilter: () => void;
+  // 패널에서 고르는 중인 값 (적용 전)
+  draftOptions: FilterOptionsType;
+  setDraftOptions: React.Dispatch<React.SetStateAction<FilterOptionsType>>;
+  optionCounts: FilterOptionCounts;
 };
 
 const FilterOverlay: React.FC<FilterOverlayProps> = ({
   isActive,
-  toggleFilter,
-  setFilterOptions,
+  closeFilter,
+  applyFilter,
+  draftOptions,
+  setDraftOptions,
+  optionCounts,
 }) => {
-  const [selectedYears, setSelectedYears] = useState<string[]>([]);
-  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-
-  const handleResetFilters = () => {
-    setSelectedGenders([]);
-    setSelectedCategories([]);
-    setSelectedYears([]);
+  // 항목 하나의 칩을 켜고 끈다
+  const toggleOption = (key: keyof FilterOptionsType) => (option: string) => {
+    setDraftOptions((prev) => ({
+      ...prev,
+      [key]: prev[key].includes(option)
+        ? prev[key].filter((value) => value !== option)
+        : [...prev[key], option],
+    }));
   };
 
-  const handleActiveFIlter = () => {
-    setFilterOptions({
-      year: selectedYears,
-      gender: selectedGenders,
-      category: selectedCategories,
-    });
-    toggleFilter();
+  const handleResetFilters = () => {
+    setDraftOptions(emptyFilterOptions);
   };
 
   return (
     <div className="max-w-100vw sm:max-w[320px]">
-      <FIlterBlackBox isActive={isActive} />
+      <FIlterBlackBox isActive={isActive} onClose={closeFilter} />
       <div
         className={`
           fixed bottom-0 left-0 right-0
@@ -64,7 +69,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
       >
         <div className="flex items-center justify-between pt-6 pb-4 px-4 border-b border-gray-200 ">
           <div className=" font-bold text-2xl">상품 필터</div>
-          <div className="cursor-pointer" onClick={toggleFilter}>
+          <div className="cursor-pointer" onClick={closeFilter}>
             <IoClose className=" font-bold text-4xl" />
           </div>
         </div>
@@ -72,20 +77,23 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
         <FilterOption
           title="연도"
           options={yearOptions}
-          selectedOptions={selectedYears}
-          setSelectedOptions={setSelectedYears}
+          selectedOptions={draftOptions.year}
+          onToggle={toggleOption("year")}
+          counts={optionCounts.year}
         />
         <FilterOption
           title="성별"
           options={genderOptions}
-          selectedOptions={selectedGenders}
-          setSelectedOptions={setSelectedGenders}
+          selectedOptions={draftOptions.gender}
+          onToggle={toggleOption("gender")}
+          counts={optionCounts.gender}
         />
         <FilterOption
           title="카테고리"
           options={categoryOptions}
-          selectedOptions={selectedCategories}
-          setSelectedOptions={setSelectedCategories}
+          selectedOptions={draftOptions.category}
+          onToggle={toggleOption("category")}
+          counts={optionCounts.category}
         />
 
         <div className="flex justify-center items-center p-4 ">
@@ -106,7 +114,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
             text-white text-center rounded 
             transition-colors duration-200 cursor-pointer
             hover:bg-blue-600"
-            onClick={handleActiveFIlter}
+            onClick={applyFilter}
           >
             적용
           </div>

@@ -1,8 +1,13 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { FilterOptionsType, ProductType } from "../../types";
 import Filter from "../Filter/Filter";
 import ProductCard from "../ProductCard/ProductCard";
-import { getFilteredData } from "../../utils/productFilter";
+import {
+  countProductsByOption,
+  countSelectedOptions,
+  emptyFilterOptions,
+  getFilteredData,
+} from "../../utils/productFilter";
 
 type ProductListViewProps = {
   products: ProductType[];
@@ -16,43 +21,80 @@ const ProductListView: React.FC<ProductListViewProps> = ({
   products,
   renderCardAction,
 }) => {
-  // 필터링된 상품 데이터를 저장하는 상태
-  const [filteredProducts, setFilteredProducts] = useState<ProductType[]>([]);
-  const [filterOptions, setFilterOptions] = useState<FilterOptionsType>({
-    year: [],
-    gender: [],
-    category: [],
-  });
+  // 실제로 적용된 필터 값 (패널에서 "적용"을 눌렀을 때만 바뀐다)
+  const [filterOptions, setFilterOptions] =
+    useState<FilterOptionsType>(emptyFilterOptions);
 
-  useEffect(() => {
-    const filteredData = getFilteredData(products, filterOptions);
+  const filteredProducts = useMemo(
+    () => getFilteredData(products, filterOptions),
+    [products, filterOptions]
+  );
 
-    if (filteredData.length === 0 && products.length > 0)
-      alert("해당하는 필터 옵션의 상품이 없습니다. 다시 선택해주세요.");
+  // 칩 옆에 보여 줄 값별 상품 수 (이 페이지 상품 기준, 고정 개수)
+  const optionCounts = useMemo(
+    () => ({
+      year: countProductsByOption(products, "year"),
+      gender: countProductsByOption(products, "gender"),
+      category: countProductsByOption(products, "category"),
+    }),
+    [products]
+  );
 
-    setFilteredProducts(filteredData);
-  }, [filterOptions, products]);
+  const selectedCount = countSelectedOptions(filterOptions);
+  const isFiltering = selectedCount > 0;
+
+  const clearFilter = () => setFilterOptions(emptyFilterOptions);
 
   return (
     <>
+      {isFiltering && (
+        // 필터 적용 상태 줄: 지금 목록이 걸러진 것인지 알려 준다.
+        <div
+          data-testid="filter-status"
+          className="flex items-center justify-between mb-2 px-3 py-2 text-sm bg-blue-50 border border-blue-200 rounded-lg"
+        >
+          <span className="text-blue-700">
+            필터 적용 중 · {filteredProducts.length}개
+          </span>
+          <button
+            type="button"
+            onClick={clearFilter}
+            className="px-2 py-0.5 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+          >
+            해제
+          </button>
+        </div>
+      )}
       <main className="">
-        {filteredProducts.length > 0
-          ? filteredProducts.map((product) => (
-              <ProductCard
-                product={product}
-                key={product.상품코드}
-                action={renderCardAction?.(product)}
-              />
-            ))
-          : products.map((product) => (
-              <ProductCard
-                product={product}
-                key={product.상품코드}
-                action={renderCardAction?.(product)}
-              />
-            ))}
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => (
+            <ProductCard
+              product={product}
+              key={product.상품코드}
+              action={renderCardAction?.(product)}
+            />
+          ))
+        ) : (
+          isFiltering && (
+            // 결과 0개: 전체 목록으로 되돌리지 않고 안내만 보여 준다.
+            <div className="flex flex-col items-center gap-3 py-10 text-gray-500">
+              <p>조건에 맞는 상품이 없습니다</p>
+              <button
+                type="button"
+                onClick={clearFilter}
+                className="px-4 py-2 text-sm text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                필터 해제
+              </button>
+            </div>
+          )
+        )}
       </main>
-      <Filter setFilterOptions={setFilterOptions} />
+      <Filter
+        appliedOptions={filterOptions}
+        onApply={setFilterOptions}
+        optionCounts={optionCounts}
+      />
     </>
   );
 };
