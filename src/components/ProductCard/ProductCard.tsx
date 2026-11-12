@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import type { ProductType } from "../../types";
 import ProductModal from "./ProductModal";
 
 type ProductCardProps = {
   product: ProductType;
+  // 카드 오른쪽 끝에 붙일 추가 버튼 등 (선택). 없으면 기존 카드와 똑같이 보인다.
+  action?: ReactNode;
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, action }) => {
   const { 상품코드, 칼라, 판매가 } = product;
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -40,6 +42,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="text-lg text-blue-600 ">
           {formatNumberWithCommas(판매가)} 원
         </div>
+        {action && (
+          // 버튼을 눌러도 카드의 상세 모달이 열리지 않게 클릭 전파를 막는다
+          <div className="ml-3" onClick={(event) => event.stopPropagation()}>
+            {action}
+          </div>
+        )}
       </div>
       {isOpen && <ProductModal product={product} onClose={closeModal} />}
     </>
