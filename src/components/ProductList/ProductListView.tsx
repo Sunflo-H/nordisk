@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { FilterOptionsType, ProductType } from "../../types";
 import Filter from "../Filter/Filter";
 import ProductCard from "../ProductCard/ProductCard";
+import { getFilteredData } from "../../utils/productFilter";
 
 type ProductListViewProps = {
   products: ProductType[];
@@ -57,20 +58,3 @@ const ProductListView: React.FC<ProductListViewProps> = ({
 };
 
 export default ProductListView;
-
-// 데이터와 필터 옵션을 받아 필터링한 데이터를 반환하는 함수
-function getFilteredData(
-  productsData: ProductType[],
-  filterOptions: FilterOptionsType
-) {
-  const { year, gender, category } = filterOptions;
-
-  return productsData.filter((product) => {
-    const matchesYear =
-      year.length === 0 || year.includes(product.연도.toString());
-    const matchesGender = gender.length === 0 || gender.includes(product.성별);
-    const matchesCategory =
-      category.length === 0 || category.includes(product.카테고리);
-    return matchesYear && matchesGender && matchesCategory;
-  });
-}
