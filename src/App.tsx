@@ -9,7 +9,7 @@ function App() {
   return (
     <div className="bg-gray-50 text-gray-800 h-100vh">
       <div className="max-w-[320px] m-auto ">
-        <header className="text-2xl font-bold mb-4 p-1 ">
+        <header className="text-2xl font-bold text-center mb-4 p-1">
           노르디스크 재고 관리
         </header>
         <ProductListView products={productsData} />
