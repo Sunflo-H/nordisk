@@ -29,3 +29,7 @@ dist-ssr
 
 # DB 백업 파일 (저장소에 올리지 않는다)
 backups/
+
+# Playwright 결과물
+test-results/
+playwright-report/
