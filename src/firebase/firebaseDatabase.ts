@@ -6,13 +6,6 @@ import "./firebaseConfig";
 const db = getDatabase();
 const dbRef = ref(db);
 
-function saveToFirebase(productDataList: ProductType[]): void {
-  productDataList.forEach((product) => {
-    const productRef = ref(db, "product/" + product.상품코드);
-    set(productRef, product);
-  });
-}
-
 // firebase에서 데이터를 가져와 productsData 상태를 업데이트하는 함수
 // 이 함수는 컴포넌트가 마운트될 때 호출되어야 합니다
 function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {
@@ -37,6 +30,35 @@ function readData(setProductsData: Dispatch<SetStateAction<ProductType[]>>) {
     .catch((error) => {
       console.error(error);
     });
+}
+
+// /product 전체를 읽어 상품 배열로 돌려준다. 비어 있으면 빈 배열.
+// (엑셀 업로드 전 요약 계산용. 실패하면 Promise가 거부된다)
+async function readAllProducts(): Promise<ProductType[]> {
+  const snapshot = await get(child(dbRef, "product"));
+  if (!snapshot.exists()) return [];
+  const value = snapshot.val() as Record<string, Omit<ProductType, "상품코드">>;
+  return Object.entries(value).map(([상품코드, item]) => ({
+    상품코드,
+    ...item,
+  }));
+}
+
+// /product를 받은 상품 목록으로 통째로 바꾼다 (새 목록에 없는 상품은 지워진다).
+// 쓰기 한 번이라 전부 성공하거나 전부 실패한다. 실패하면 DB는 그대로다.
+// 빈 목록·잘못된 상품코드·중복 상품코드는 쓰기 전에 막는다 (빈 값으로 /product를 날리지 않도록).
+async function replaceAllProducts(products: ProductType[]): Promise<void> {
+  if (products.length === 0) throw new Error("저장할 상품이 없습니다.");
+  const productMap: Record<string, ProductType> = {};
+  for (const product of products) {
+    const code = toSafeProductCode(product.상품코드);
+    if (!code || code !== product.상품코드)
+      throw new Error(`잘못된 상품코드가 있습니다: "${product.상품코드}"`);
+    if (productMap[code])
+      throw new Error(`중복된 상품코드가 있습니다: "${code}"`);
+    productMap[code] = product;
+  }
+  await set(ref(db, "product"), productMap);
 }
 
 function updateData(updatedProduct: ProductType): void {
@@ -107,8 +129,9 @@ function clearEventProductCodes(): Promise<void> {
 }
 
 export {
-  saveToFirebase,
   readData,
+  readAllProducts,
+  replaceAllProducts,
   updateData,
   deleteData,
   readEventProductCodes,

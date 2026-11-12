@@ -1,50 +1,38 @@
-import { useRef } from "react";
-import * as XLSX from "xlsx";
-import type {
-  ExcelDataType,
-  MergedExcelDataType,
-  ProductType,
-  SizeKey,
-} from "../../types";
-import { deleteData, saveToFirebase } from "../../firebase/firebaseDatabase";
+import { useRef, useState } from "react";
+import {
+  deleteData,
+  readAllProducts,
+  replaceAllProducts,
+} from "../../firebase/firebaseDatabase";
+import {
+  parseInventoryExcel,
+  type ParseExcelResult,
+} from "../../utils/excelParser";
+import {
+  summarizeUpload,
+  type UploadSummary,
+} from "../../utils/uploadSummary";
 
-// 엑셀 파일을 선택함과 동시에 데이터를 파이어베이스에 저장 ->
+// 엑셀 업로드·데이터 삭제 버튼 (PC 전용)
+// 업로드: 파일 선택 → 검사 → 요약 확인창 → 확인하면 /product 전체 교체 → 저장이 끝난 뒤 결과 알림
 const ExcelManager = () => {
-  // 엑셀 파일을 읽고 데이터를 변환 후 파이어베이스에 저장한다.
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return; // 파일이 없으면 종료
-    const reader = new FileReader();
-    reader.onload = (evt: ProgressEvent<FileReader>) => {
-      const binaryStr = evt.target?.result;
-      if (typeof binaryStr !== "string") return;
-
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-
-      // 첫번째 행과 마지막행을 splice하는 이유 : 첫번째 행은 상품명, 가격 등의 속성 데이터이고, 마지막 행은 총합이기 때문
-      const excelDataList = XLSX.utils
-        .sheet_to_json(sheet)
-        .slice(1, -1) as ExcelDataType[];
-      // 엑셀데이터에서 수선중, 이동중, 출고가 등 불필요한 속성을 제거한 데이터
-      const filteredDataList = excelDataList.map((data) => {
-        return Object.fromEntries(
-          Object.entries(data).filter(([key]) => allowedKeys.includes(key))
-        );
-      }) as ExcelDataType[];
-      const mergedDataList = mergeExcelData(filteredDataList);
-      // console.log("mergedDataList", mergedDataList);
-      const productDataList = transformExcelData(mergedDataList);
-      // console.log("productDataList", productDataList);
-      saveToFirebase(productDataList);
-      console.log("productDataList", productDataList);
-    };
-
-    reader.readAsBinaryString(file);
-  };
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // 업로드 처리 중에는 버튼을 막아 중복 저장을 막는다
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // 같은 파일을 다시 골라도 onChange가 불리도록 선택값을 비워 둔다
+    e.target.value = "";
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      await uploadExcelFile(file);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleFileInput = () => {
     fileInputRef.current?.click(); // input 클릭 트리거
@@ -68,12 +56,14 @@ const ExcelManager = () => {
         ref={fileInputRef}
         className="hidden"
       />
-      <div
+      <button
+        type="button"
         onClick={handleFileInput}
-        className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
+        disabled={isUploading}
+        className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block disabled:bg-gray-300 disabled:cursor-not-allowed"
       >
-        엑셀 파일 업로드
-      </div>
+        {isUploading ? "업로드 중..." : "엑셀 파일 업로드"}
+      </button>
       <div
         className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
         onClick={handleDeleteAllProducts}
@@ -86,94 +76,66 @@ const ExcelManager = () => {
 
 export default ExcelManager;
 
-const allowedKeys = [
-  ...Array.from({ length: 20 }, (_, i) => i.toString().padStart(2, "0")), // "00" ~ "19"
-  "상품명",
-  "상품코드",
-  "칼라",
-  "판매가",
-  "재고",
-];
+// 엑셀 파일 하나를 검사하고, 요약을 보여 준 뒤 확인하면 /product를 통째로 바꾼다.
+// 어느 단계에서든 실패하거나 취소하면 DB에 쓰지 않는다.
+async function uploadExcelFile(file: File) {
+  // 1. 엑셀 읽기 + 필수 열·상품코드 검사
+  let parsed: ParseExcelResult;
+  try {
+    parsed = parseInventoryExcel(await file.arrayBuffer());
+  } catch (error) {
+    console.error(error);
+    alert("엑셀 파일을 읽지 못했습니다. 저장하지 않았습니다.");
+    return;
+  }
+  if (!parsed.ok) {
+    alert(`저장하지 않았습니다.\n${parsed.reason}`);
+    return;
+  }
 
-/** 상품코드가 동일한 엑셀 데이터를 합쳐 칼라별 재고 데이터로 만드는 함수*/
-function mergeExcelData(excelRows: ExcelDataType[]): MergedExcelDataType[] {
-  const productMap = new Map<string, MergedExcelDataType>();
+  // 2. 현재 DB와 비교해 요약 만들기
+  let summary: UploadSummary;
+  try {
+    summary = summarizeUpload(await readAllProducts(), parsed.products);
+  } catch (error) {
+    console.error(error);
+    alert("현재 상품 데이터를 읽지 못했습니다. 저장하지 않았습니다.");
+    return;
+  }
 
-  excelRows.forEach((row) => {
-    const { 상품코드, 상품명, 칼라, 재고, 판매가, ...sizes } = row;
-    // 상품코드로 기존 데이터가 있는지 확인
-    if (!productMap.has(상품코드)) {
-      productMap.set(상품코드, {
-        상품코드,
-        상품명,
-        칼라: [],
-        판매가,
-        재고: {},
-      });
-    }
-    const product = productMap.get(상품코드)!;
+  // 3. 요약 확인창 (취소하면 끝)
+  if (!window.confirm(formatSummary(file.name, summary))) {
+    alert("취소했습니다. 상품 데이터는 바뀌지 않았습니다.");
+    return;
+  }
 
-    // 해당 상품의 재고에 칼라 추가
-    product.재고[칼라] = {} as Record<SizeKey, number>;
-
-    // 사이즈별 수량 추가
-    (Object.keys(sizes) as SizeKey[]).forEach((size) => {
-      product.재고[칼라][size] = sizes[size];
-    });
-  });
-
-  const result = Array.from(productMap.values());
-  return result;
+  // 4. /product 전체 교체 (쓰기 한 번) → 끝난 뒤 결과 알림
+  try {
+    await replaceAllProducts(parsed.products);
+  } catch (error) {
+    console.error(error);
+    alert("저장에 실패했습니다. 상품 데이터는 업로드 전 그대로입니다.");
+    return;
+  }
+  alert(`저장했습니다. (상품 ${summary.totalCount}개)`);
 }
 
-// mergedExcelData를 상품 데이터(연도, 카테고리, 성별 등)로 변환하는 함수
-function transformExcelData(
-  mergedExcelDataList: MergedExcelDataType[]
-): ProductType[] {
-  const transformedDataList: ProductType[] = mergedExcelDataList.map((data) => {
-    const 상품코드 = data.상품코드;
-    const 성별코드 = 상품코드.charAt(1);
-    const 연도코드 = 상품코드.slice(3, 5);
-    const 카테고리코드 = 상품코드.charAt(5);
-
-    const 성별: string =
-      { M: "남성", W: "여성", U: "공용", X: "키즈" }[성별코드] || "기타";
-    const 연도: number = parseInt(연도코드, 10);
-    const 카테고리: string =
-      {
-        "1": "자켓",
-        "2": "티셔츠",
-        "3": "바지",
-        "4": "셔츠",
-        "5": "패딩",
-        "6": "베스트",
-        "7": "고어텍스",
-        // "M":"반팔티셔츠",
-        "9": "용품",
-        K: "스웨터",
-        W: "원피스",
-        Q: "큐롯",
-        "8": "속옷",
-        G: "등산화",
-        N: "일반 신발",
-        C: "모자",
-        V: "장갑",
-        S: "양말",
-        B: "가방",
-        A: "캠핑용품",
-      }[카테고리코드] || "악세사리";
-    const 판매가 = data.판매가;
-    const 칼라 = Object.keys(data.재고);
-    return {
-      상품코드,
-      상품명: data.상품명,
-      연도,
-      카테고리,
-      성별,
-      칼라,
-      판매가,
-      재고: data.재고,
-    };
-  });
-  return transformedDataList;
+// 요약 확인창 문구. 사라지는 상품은 몇 개만 예로 보여 준다.
+function formatSummary(fileName: string, summary: UploadSummary) {
+  const { totalCount, addedCodes, removedCodes, changedCodes } = summary;
+  const lines = [
+    `"${fileName}"의 내용으로 상품 데이터를 통째로 바꿉니다.`,
+    "",
+    `· 상품 수: ${totalCount}개`,
+    `· 새 상품: ${addedCodes.length}개`,
+    `· 사라지는 상품: ${removedCodes.length}개`,
+    `· 재고·판매가가 바뀐 상품: ${changedCodes.length}개`,
+  ];
+  if (removedCodes.length > 0) {
+    const examples = removedCodes.slice(0, 5).join(", ");
+    const more = removedCodes.length > 5 ? ` 외 ${removedCodes.length - 5}개` : "";
+    lines.push("", `사라지는 상품: ${examples}${more}`);
+  }
+  lines.push("", "저장할까요?");
+  return lines.join("\n");
 }
