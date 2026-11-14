@@ -17,7 +17,7 @@ const Home = () => {
           </Link>
           <Link
             to="/event"
-            className="block w-full py-3 bg-blue-500 text-white! text-center font-semibold rounded-xl shadow-md hover:bg-blue-600 transition-colors"
+            className="block w-full py-3 bg-emerald-500 text-white! text-center font-semibold rounded-xl shadow-md hover:bg-emerald-600 transition-colors"
           >
             행사장 재고 관리
           </Link>
