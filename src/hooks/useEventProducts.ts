@@ -20,7 +20,7 @@ type UseEventProductsResult = {
 
 // 행사장 상품코드 목록과 전체 상품 데이터를 합쳐 행사장 상품을 돌려주는 훅
 function useEventProducts(): UseEventProductsResult {
-  const allProducts = useProducts();
+  const { products: allProducts } = useProducts();
   const [eventProductCodes, setEventProductCodes] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
