@@ -4,7 +4,7 @@ import SalesUploader from "../components/Restock/SalesUploader";
 import useRestockLists from "../hooks/useRestockLists";
 import useStoreSaleName from "../hooks/useStoreSaleName";
 
-// 행사장 재고 챙기기 페이지 (/event/restock, PC 전용)
+// 행사장 판매분 챙기기 페이지 (/event/restock, PC 전용)
 // 행사장에서 팔린 상품을 매장 재고에서 챙겨 보내는 일을 관리한다.
 // 매장 판매 표시 이름 입력칸, 판매내역 업로드, 챙길 목록이 있다.
 const EventRestock = () => {
@@ -13,7 +13,7 @@ const EventRestock = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
-      <PageHeader title="행사장 재고 챙기기" />
+      <PageHeader title="행사장 판매분 챙기기" />
 
       {/* 모바일: 안내만 보여 준다 */}
       <p className="sm:hidden mt-10 px-4 text-center text-gray-500">
