@@ -15,7 +15,7 @@ export type SalesDateSummary = {
   판매일자: string;
   rowCount: number; // 판매내역 줄 수 (매장·행사장 모두)
   eventLineCount: number; // 행사장 판매 줄 수 (매장 판매 표시 이름 제외, 반품 줄 포함)
-  itemCount: number; // 챙길 목록 항목 수
+  itemCount: number; // 챙길 목록 항목 수 (판매 줄마다 한 항목)
   returnCount: number; // 반품·교환 확인 필요 항목 수
 };
 
@@ -28,7 +28,8 @@ export type SalesUploadPlan = {
   returns: Record<string, RestockReturn>;
 };
 
-// 같은 날짜·상품·칼라·사이즈를 하나로 묶는 키이자 items·returns의 id.
+// 같은 날짜·상품·칼라·사이즈를 하나로 묶는 키. returns의 id로 쓰고,
+// items의 id는 여기에 판매 줄 순번을 붙인다 ("…_1", "…_2").
 // 같은 파일을 다시 저장해도 같은 id가 나와 항목이 두 번 생기지 않는다.
 export function toRestockId(line: Pick<SalesLine, "판매일자" | "상품코드" | "칼라" | "사이즈">): string {
   return `${line.판매일자}_${line.상품코드}_${line.칼라}_${line.사이즈}`;
@@ -72,33 +73,36 @@ export function planSalesUpload(
       (line) => eventCodes.has(line.상품코드) && !line.isStoreSale
     );
 
-    // 같은 날짜·상품·칼라·사이즈끼리 수량을 더해 판매와 반품을 서로 지운다
-    const grouped = new Map<string, { line: SalesLine; 수량: number }>();
+    // 같은 날짜·상품·칼라·사이즈끼리 묶어 판매와 반품을 서로 지운다
+    const grouped = new Map<string, SalesLine[]>();
     for (const line of eventLines) {
       const id = toRestockId(line);
-      const group = grouped.get(id);
-      if (group) group.수량 += line.판매수량;
-      else grouped.set(id, { line, 수량: line.판매수량 });
+      const groupLines = grouped.get(id) ?? [];
+      groupLines.push(line);
+      grouped.set(id, groupLines);
     }
 
     let itemCount = 0;
     let returnCount = 0;
-    for (const [id, { line, 수량 }] of grouped) {
+    for (const [id, groupLines] of grouped) {
+      const { remainingSales, unmatchedReturn } = cancelReturns(groupLines);
+      const first = groupLines[0];
       const base = {
-        판매일자: line.판매일자,
-        상품코드: line.상품코드,
-        상품명: line.상품명,
-        칼라: line.칼라,
-        사이즈: line.사이즈,
-        사이즈명: line.사이즈명,
-        수량,
+        판매일자: first.판매일자,
+        상품코드: first.상품코드,
+        상품명: first.상품명,
+        칼라: first.칼라,
+        사이즈: first.사이즈,
+        사이즈명: first.사이즈명,
       };
-      if (수량 > 0) {
-        plan.items[id] = { ...base, 상태: "pending" };
+      // 챙길 목록은 판매 줄(영수증)마다 따로 만든다 (하나는 챙김, 하나는 못 챙김으로 나눠 처리할 수 있게)
+      remainingSales.forEach((수량, index) => {
+        plan.items[`${id}_${index + 1}`] = { ...base, 수량, 상태: "pending" };
         itemCount += 1;
-      } else if (수량 < 0) {
+      });
+      if (unmatchedReturn < 0) {
         // 짝이 없는 반품은 자동으로 처리하지 않고 확인 목록으로 보낸다
-        plan.returns[id] = { ...base, 확인함: false };
+        plan.returns[id] = { ...base, 수량: unmatchedReturn, 확인함: false };
         returnCount += 1;
       }
     }
@@ -113,6 +117,28 @@ export function planSalesUpload(
   }
 
   return plan;
+}
+
+// 같은 날짜·상품·칼라·사이즈의 줄 묶음에서 반품 수량만큼 판매 줄을 지운다.
+// 반품은 나중 판매 줄부터 지운다. 다 지우고도 남은 반품은 unmatchedReturn(음수)으로 돌려준다.
+// remainingSales: 남은 판매 줄의 수량 (엑셀 순서, 0이 된 줄은 뺌)
+function cancelReturns(lines: SalesLine[]): {
+  remainingSales: number[];
+  unmatchedReturn: number;
+} {
+  const sales = lines.filter((line) => line.판매수량 > 0).map((line) => line.판매수량);
+  let returnLeft = -lines
+    .filter((line) => line.판매수량 < 0)
+    .reduce((sum, line) => sum + line.판매수량, 0);
+  for (let i = sales.length - 1; i >= 0 && returnLeft > 0; i -= 1) {
+    const cancelled = Math.min(sales[i], returnLeft);
+    sales[i] -= cancelled;
+    returnLeft -= cancelled;
+  }
+  return {
+    remainingSales: sales.filter((quantity) => quantity > 0),
+    unmatchedReturn: -returnLeft,
+  };
 }
 
 // 하루치 판매(매장·행사장 모두)를 상품코드·칼라·사이즈별 순판매 수량으로 더한다.
