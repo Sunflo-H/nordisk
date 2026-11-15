@@ -1,5 +1,6 @@
 import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
+import type { SalesUploadPlan } from "../utils/restockPlan";
 import type {
   EventCategory,
   EventCategoryMap,
@@ -169,7 +170,65 @@ function clearEventProductCodes(): Promise<void> {
   return set(ref(db, EVENT_PRODUCTS_PATH), null);
 }
 
+// ===== 행사장 보충(/restock) 관련 함수 =====
+// 저장 구조는 spec.md "DB 저장 구조". 고객명은 어디에도 저장하지 않는다.
+const RESTOCK_PATH = "restock";
+
+// 저장 직전에 다른 곳에서 같은 판매일자를 먼저 저장한 것을 발견했을 때의 오류
+class SalesDateConflictError extends Error {
+  readonly dates: string[];
+  constructor(dates: string[]) {
+    super(`이미 저장된 판매일자가 있습니다: ${dates.join(", ")}`);
+    this.name = "SalesDateConflictError";
+    this.dates = dates;
+  }
+}
+
+// 이미 올린 판매일자 목록을 읽는다. 비어 있으면 빈 집합.
+async function readSalesDates(): Promise<Set<string>> {
+  const snapshot = await get(child(dbRef, `${RESTOCK_PATH}/salesDates`));
+  if (!snapshot.exists()) return new Set();
+  return new Set(Object.keys(snapshot.val() as Record<string, unknown>));
+}
+
+// 판매내역 업로드 계획을 쓰기 한 번(update)으로 저장한다 (전부 성공하거나 전부 실패).
+// 날짜·항목 단위 경로에 써서 이미 저장된 다른 날짜·항목은 건드리지 않는다.
+async function saveSalesUpload(plan: SalesUploadPlan): Promise<void> {
+  const dates = Object.keys(plan.salesDates);
+  if (dates.length === 0) throw new Error("새로 저장할 판매일자가 없습니다.");
+
+  // 미리보기를 보는 사이 다른 PC·탭에서 같은 날짜를 먼저 저장했을 수 있다.
+  // 그대로 쓰면 챙김 상태 등을 "챙길 것"으로 덮어쓰므로, 저장 직전에 다시 읽어 막는다.
+  const latestDates = await readSalesDates();
+  const conflictDates = dates.filter((date) => latestDates.has(date));
+  if (conflictDates.length > 0) throw new SalesDateConflictError(conflictDates);
+
+  const updates: Record<string, unknown> = {};
+  for (const date of dates) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
+      throw new Error(`잘못된 판매일자입니다: "${date}"`);
+    updates[`${RESTOCK_PATH}/salesDates/${date}`] = plan.salesDates[date];
+    if (plan.sales[date]) updates[`${RESTOCK_PATH}/sales/${date}`] = plan.sales[date];
+  }
+  for (const [id, item] of Object.entries(plan.items)) {
+    updates[`${RESTOCK_PATH}/items/${toSafeKey(id)}`] = item;
+  }
+  for (const [id, item] of Object.entries(plan.returns)) {
+    updates[`${RESTOCK_PATH}/returns/${toSafeKey(id)}`] = item;
+  }
+  await update(ref(db), updates);
+}
+
+// 경로 키로 쓸 수 없는 값이면 쓰기 전에 막는다 (빈 값이면 상위 경로 전체를 덮어쓰게 된다)
+function toSafeKey(key: string): string {
+  if (!key || /[.#$[\]/]/.test(key)) throw new Error(`잘못된 키입니다: "${key}"`);
+  return key;
+}
+
 export {
+  SalesDateConflictError,
+  readSalesDates,
+  saveSalesUpload,
   readData,
   readAllProducts,
   replaceAllProducts,

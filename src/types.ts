@@ -79,3 +79,59 @@ export type EventCategoryMap = Record<string, EventCategory>;
 
 // 상품 카드에 보여 줄 재고 위치 (행사장 목록에 없으면 store_only)
 export type StockLocation = EventCategory | "store_only";
+
+// ===== 행사장 보충(/restock) =====
+
+// 판매내역 엑셀 한 줄을 다듬은 값. 고객명은 담지 않고, 매장 판매인지 여부만 남긴다.
+export type SalesLine = {
+  판매일자: string; // "YYYY-MM-DD"
+  상품코드: string;
+  상품명: string;
+  칼라: string;
+  사이즈: SizeKey;
+  사이즈명: string;
+  판매수량: number; // 반품은 음수
+  isStoreSale: boolean; // 고객명이 매장 판매 표시 이름이면 true
+};
+
+// 챙길 목록 상태: 챙길 것 / 챙김 / 못 챙김
+export type RestockStatus = "pending" | "packed" | "notPacked";
+
+// 못 챙김 사유: 매장 보관 / 품절
+export type RestockReason = "keepInStore" | "soldOut";
+
+// /restock/items/{id}
+export type RestockItem = {
+  판매일자: string;
+  상품코드: string;
+  상품명: string;
+  칼라: string;
+  사이즈: SizeKey;
+  사이즈명: string;
+  수량: number;
+  상태: RestockStatus;
+  사유?: RestockReason;
+  기준재고?: number;
+  기준일?: string;
+};
+
+// /restock/returns/{id} (수량은 음수 그대로)
+export type RestockReturn = {
+  판매일자: string;
+  상품코드: string;
+  상품명: string;
+  칼라: string;
+  사이즈: SizeKey;
+  사이즈명: string;
+  수량: number;
+  확인함: boolean;
+};
+
+// /restock/salesDates/{판매일자}
+export type SalesDateInfo = {
+  uploadedAt: string; // 올린 날짜 "YYYY-MM-DD"
+  rowCount: number; // 그 날짜의 판매내역 줄 수
+};
+
+// /restock/sales/{판매일자}/{상품코드}/{칼라}/{사이즈}: 순판매 수량 (반품을 뺀 값)
+export type DailySales = Record<string, Record<string, Partial<Record<SizeKey, number>>>>;
