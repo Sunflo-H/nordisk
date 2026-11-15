@@ -49,7 +49,7 @@ const SalesUploader = ({ storeSaleName }: SalesUploaderProps) => {
       <h2 className="font-semibold mb-1">판매내역 업로드</h2>
       <p className="text-sm text-gray-500 mb-3">
         금일상품별판매내역 엑셀을 올리면 행사장 판매를 골라 챙길 목록을
-        만듭니다. 이미 올린 날짜는 건너뜁니다.
+        만듭니다. 이미 저장된 판매일자는 다시 저장하지 않습니다.
       </p>
       <input
         type="file"
@@ -115,7 +115,7 @@ async function uploadSalesFile(file: File, storeSaleName: string) {
 
   if (plan.summaries.length === 0) {
     alert(
-      `모든 날짜를 이미 올렸습니다. 저장하지 않았습니다.\n건너뛴 날짜: ${plan.skippedDates.join(", ")}`
+      `이 파일의 판매내역은 이미 저장되어 있어 다시 저장하지 않았습니다.\n이미 저장된 판매일자: ${plan.skippedDates.join(", ")}`
     );
     return;
   }
@@ -146,7 +146,7 @@ async function uploadSalesFile(file: File, storeSaleName: string) {
     `저장했습니다. (판매일자 ${plan.summaries.length}일, 챙길 목록 ${itemCount}개, 반품 확인 ${returnCount}개)`,
   ];
   if (plan.skippedDates.length > 0) {
-    lines.push(`이미 올려서 건너뛴 날짜: ${plan.skippedDates.join(", ")}`);
+    lines.push(`이미 저장되어 있어 건너뛴 판매일자: ${plan.skippedDates.join(", ")}`);
   }
   alert(lines.join("\n"));
 }
@@ -160,7 +160,7 @@ function formatPreview(fileName: string, plan: SalesUploadPlan) {
     );
   }
   if (plan.skippedDates.length > 0) {
-    lines.push("", `이미 올려서 건너뛸 날짜: ${plan.skippedDates.join(", ")}`);
+    lines.push("", `이미 저장되어 있어 건너뛸 판매일자: ${plan.skippedDates.join(", ")}`);
   }
   lines.push("", "저장할까요?");
   return lines.join("\n");
