@@ -12,11 +12,13 @@ import { parseSalesExcel, type ParseSalesResult } from "../../utils/salesParser"
 type SalesUploaderProps = {
   // 매장 판매 표시 이름 (비어 있으면 업로드를 막는다)
   storeSaleName: string;
+  // 저장에 성공한 뒤 챙길 목록을 다시 읽는다
+  onSaved: () => Promise<void>;
 };
 
 // 판매내역 업로드 (PC 전용 페이지 안에서만 쓰인다)
 // 파일 선택 → 검사·판별 → 미리보기 확인창 → 확인하면 /restock에 쓰기 한 번 → 끝난 뒤 결과 알림
-const SalesUploader = ({ storeSaleName }: SalesUploaderProps) => {
+const SalesUploader = ({ storeSaleName, onSaved }: SalesUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // 처리 중에는 버튼을 막아 중복 저장을 막는다
   const [isUploading, setIsUploading] = useState(false);
@@ -38,7 +40,8 @@ const SalesUploader = ({ storeSaleName }: SalesUploaderProps) => {
 
     setIsUploading(true);
     try {
-      await uploadSalesFile(file, storeSaleName);
+      const saved = await uploadSalesFile(file, storeSaleName);
+      if (saved) await onSaved();
     } finally {
       setIsUploading(false);
     }
@@ -78,8 +81,8 @@ const SalesUploader = ({ storeSaleName }: SalesUploaderProps) => {
 export default SalesUploader;
 
 // 판매내역 파일 하나를 검사·판별하고, 미리보기를 보여 준 뒤 확인하면 저장한다.
-// 어느 단계에서든 실패하거나 취소하면 DB에 쓰지 않는다.
-async function uploadSalesFile(file: File, storeSaleName: string) {
+// 어느 단계에서든 실패하거나 취소하면 DB에 쓰지 않는다. 저장했으면 true를 돌려준다.
+async function uploadSalesFile(file: File, storeSaleName: string): Promise<boolean> {
   // 1. 엑셀 읽기 + 필수 열 검사 + 매장 판매 판별 (결과에 고객명 없음)
   let parsed: ParseSalesResult;
   try {
@@ -87,11 +90,11 @@ async function uploadSalesFile(file: File, storeSaleName: string) {
   } catch (error) {
     console.error(error);
     alert("엑셀 파일을 읽지 못했습니다. 저장하지 않았습니다.");
-    return;
+    return false;
   }
   if (!parsed.ok) {
     alert(`저장하지 않았습니다.\n${parsed.reason}`);
-    return;
+    return false;
   }
 
   // 2. 행사장 목록·이미 올린 날짜를 읽어 계획 만들기
@@ -110,20 +113,20 @@ async function uploadSalesFile(file: File, storeSaleName: string) {
   } catch (error) {
     console.error(error);
     alert("행사장 목록이나 올린 판매일자를 읽지 못했습니다. 저장하지 않았습니다.");
-    return;
+    return false;
   }
 
   if (plan.summaries.length === 0) {
     alert(
       `이 파일의 판매내역은 이미 저장되어 있어 다시 저장하지 않았습니다.\n이미 저장된 판매일자: ${plan.skippedDates.join(", ")}`
     );
-    return;
+    return false;
   }
 
   // 3. 미리보기 확인창 (취소하면 끝)
   if (!window.confirm(formatPreview(file.name, plan))) {
     alert("취소했습니다. 아무것도 저장하지 않았습니다.");
-    return;
+    return false;
   }
 
   // 4. 쓰기 한 번으로 저장 → 끝난 뒤 결과 알림
@@ -135,10 +138,10 @@ async function uploadSalesFile(file: File, storeSaleName: string) {
       alert(
         `다른 곳에서 같은 날짜를 먼저 저장했습니다. 아무것도 저장하지 않았습니다.\n날짜: ${error.dates.join(", ")}\n새로고침한 뒤 다시 올려 주세요.`
       );
-      return;
+      return false;
     }
     alert("저장에 실패했습니다. 아무것도 저장하지 않았습니다.");
-    return;
+    return false;
   }
   const itemCount = Object.keys(plan.items).length;
   const returnCount = Object.keys(plan.returns).length;
@@ -149,6 +152,7 @@ async function uploadSalesFile(file: File, storeSaleName: string) {
     lines.push(`이미 저장되어 있어 건너뛴 판매일자: ${plan.skippedDates.join(", ")}`);
   }
   alert(lines.join("\n"));
+  return true;
 }
 
 // 미리보기 확인창 문구

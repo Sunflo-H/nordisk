@@ -1,10 +1,22 @@
-import { child, get, getDatabase, ref, set, update } from "firebase/database";
+import {
+  child,
+  get,
+  getDatabase,
+  ref,
+  runTransaction,
+  set,
+  update,
+} from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
 import type { SalesUploadPlan } from "../utils/restockPlan";
 import type {
   EventCategory,
   EventCategoryMap,
   ProductType,
+  RestockItem,
+  RestockReason,
+  RestockReturn,
+  SalesDateInfo,
   UpdatedDataType,
 } from "../types";
 import "./firebaseConfig";
@@ -225,10 +237,139 @@ function toSafeKey(key: string): string {
   return key;
 }
 
+// 챙길 목록 화면에서 쓰는 /restock 데이터 (입고 계산용 sales는 읽지 않는다)
+export type RestockLists = {
+  items: Record<string, RestockItem>;
+  returns: Record<string, RestockReturn>;
+  salesDates: Record<string, SalesDateInfo>;
+};
+
+// 챙길 목록·반품 확인 목록·올린 판매일자를 읽는다. 비어 있는 경로는 빈 객체.
+async function readRestockLists(): Promise<RestockLists> {
+  const [items, returns, salesDates] = await Promise.all(
+    ["items", "returns", "salesDates"].map((name) =>
+      get(child(dbRef, `${RESTOCK_PATH}/${name}`))
+    )
+  );
+  return {
+    items: (items.val() ?? {}) as Record<string, RestockItem>,
+    returns: (returns.val() ?? {}) as Record<string, RestockReturn>,
+    salesDates: (salesDates.val() ?? {}) as Record<string, SalesDateInfo>,
+  };
+}
+
+// 챙길 목록 상태 바꾸기: 챙길 것으로 되돌림 / 챙김 / 못 챙김(사유)
+export type RestockStatusChange =
+  | { 상태: "pending" }
+  | { 상태: "packed" }
+  | { 상태: "notPacked"; 사유: RestockReason };
+
+// 챙길 목록 항목 하나의 상태를 바꾸고, 저장된 항목을 돌려준다.
+// 못 챙김으로 바꿀 때 그 칼라·사이즈의 지금 재고(/product)와 재고 날짜(/meta/productUploadedAt)를
+// 기준재고·기준일로 함께 저장한다. 이미 못 챙김인 항목의 사유만 바꿀 때는 기준을 그대로 둔다
+// (기준을 새로 잡으면 그 사이 들어온 입고를 놓치게 되므로).
+// 확인과 쓰기 사이에 다른 곳에서 항목을 지워도 반쪽 항목이 생기지 않도록 트랜잭션으로 쓴다.
+async function changeRestockItemStatus(
+  id: string,
+  change: RestockStatusChange
+): Promise<RestockItem> {
+  const itemRef = ref(db, `${RESTOCK_PATH}/items/${toSafeKey(id)}`);
+  const snapshot = await get(itemRef);
+  if (!isRestockLine(snapshot.val())) throw new Error("챙길 목록에 없는 항목입니다.");
+  const current = snapshot.val() as RestockItem;
+  // 못 챙김으로 바꿀 때 쓸 새 기준 (트랜잭션 함수는 동기라 미리 읽어 둔다)
+  const baseline =
+    change.상태 === "notPacked" ? await readStockBaseline(current) : null;
+
+  let isMissing = false;
+  const result = await runTransaction(itemRef, (value: unknown) => {
+    // 처음에는 로컬 캐시 값(null)으로 불릴 수 있다. null을 돌려주면 서버 값과 다를 때 다시 불린다.
+    if (value === null) return null;
+    if (!isRestockLine(value)) {
+      isMissing = true;
+      return undefined; // 형식이 다른 값은 건드리지 않고 중단
+    }
+    const item = value as RestockItem;
+    const next: RestockItem = { ...item, 상태: change.상태 };
+    delete next.사유;
+    delete next.기준재고;
+    delete next.기준일;
+    if (change.상태 === "notPacked" && baseline) {
+      next.사유 = change.사유;
+      const keepBaseline =
+        item.상태 === "notPacked" &&
+        typeof item.기준재고 === "number" &&
+        typeof item.기준일 === "string";
+      next.기준재고 = keepBaseline ? item.기준재고 : baseline.기준재고;
+      next.기준일 = keepBaseline ? item.기준일 : baseline.기준일;
+    }
+    return next;
+  });
+  const saved: unknown = result.snapshot.val();
+  if (isMissing || !result.committed || !isRestockLine(saved))
+    throw new Error("챙길 목록에 없는 항목입니다. 새로고침해 주세요.");
+  return saved as RestockItem;
+}
+
+// DB 값이 판매일자·상품코드·칼라·사이즈를 가진 항목인지 (반쪽 항목·삭제된 항목 구분용)
+function isRestockLine(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const line = value as Record<string, unknown>;
+  return ["판매일자", "상품코드", "칼라", "사이즈"].every(
+    (key) => typeof line[key] === "string"
+  );
+}
+
+// 항목의 칼라·사이즈 지금 재고와 재고 날짜를 DB에서 새로 읽는다.
+// 재고 엑셀에 그 상품·칼라·사이즈가 없으면 재고 0으로 본다. 값의 형식이 다르면 막는다.
+// 재고 날짜가 없으면 입고 계산을 할 수 없으므로 막는다.
+async function readStockBaseline(
+  item: Pick<RestockItem, "상품코드" | "칼라" | "사이즈">
+): Promise<{ 기준재고: number; 기준일: string }> {
+  const stockPath = `product/${toSafeKey(item.상품코드)}/재고/${toSafeKey(item.칼라)}/${toSafeKey(item.사이즈)}`;
+  const [stockSnapshot, 기준일] = await Promise.all([
+    get(child(dbRef, stockPath)),
+    readProductUploadedAt(),
+  ]);
+  if (!기준일)
+    throw new Error("재고 기준일이 없습니다. 재고 엑셀을 먼저 올려 주세요.");
+  const stock: unknown = stockSnapshot.val();
+  if (stock === null) return { 기준재고: 0, 기준일 };
+  if (typeof stock !== "number" || !Number.isFinite(stock))
+    throw new Error(`재고 값의 형식이 맞지 않습니다: ${String(stock)}`);
+  return { 기준재고: stock, 기준일 };
+}
+
+// 반품·교환 확인 목록의 "확인함"을 바꾼다 (없는 항목에 반쪽 항목이 생기지 않도록 트랜잭션)
+async function setRestockReturnChecked(id: string, checked: boolean): Promise<void> {
+  const returnRef = ref(db, `${RESTOCK_PATH}/returns/${toSafeKey(id)}`);
+  let isMissing = false;
+  const result = await runTransaction(returnRef, (value: unknown) => {
+    if (value === null) return null;
+    if (!isRestockLine(value)) {
+      isMissing = true;
+      return undefined;
+    }
+    return { ...(value as RestockReturn), 확인함: checked };
+  });
+  if (isMissing || !result.committed || !isRestockLine(result.snapshot.val()))
+    throw new Error("반품 확인 목록에 없는 항목입니다. 새로고침해 주세요.");
+}
+
+// 챙길 목록에서 항목 하나를 지운다 (반품·교환을 확인한 뒤 사용자가 직접 고른 항목).
+// 판매 기록(/restock/sales)은 그대로 두어 입고 계산에는 영향이 없다.
+async function deleteRestockItem(id: string): Promise<void> {
+  await set(ref(db, `${RESTOCK_PATH}/items/${toSafeKey(id)}`), null);
+}
+
 export {
   SalesDateConflictError,
   readSalesDates,
   saveSalesUpload,
+  readRestockLists,
+  changeRestockItemStatus,
+  setRestockReturnChecked,
+  deleteRestockItem,
   readData,
   readAllProducts,
   replaceAllProducts,
