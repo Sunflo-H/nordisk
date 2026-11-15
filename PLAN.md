@@ -287,11 +287,12 @@ PC에서 행사장 상품을 하나씩 빼거나 전체를 비울 수 있다. �
 - 재고 엑셀 업로드(`ExcelManager`) 저장 때 `/meta/productUploadedAt`에 올린 날짜(`YYYY-MM-DD`)도 함께 저장한다. `/product` 전체 교체와 같은 쓰기 한 번으로 묶는다.
 
 **통과 조건**
-- [ ] [AI] `npm run build` 성공
-- [ ] [AI] 새로 만들거나 고친 파일에서 린트 에러 없음
-- [ ] [AI] Playwright로 확인: 1280px 홈에서 버튼을 누르면 `/event/restock`으로 이동한다. 375px에서는 홈 버튼이 보이지 않고, 주소로 들어가면 안내만 보인다.
-- [ ] [AI] Playwright로 확인: 이름을 입력하고 새로고침해도 남아 있다 (localStorage만 쓰고 DB에는 쓰지 않음).
-- [ ] [AI] 저장소 전체에서 실제 이름이 나오지 않는지 검색한다.
+- [x] [AI] 시작 전 `/product`·`/event/products`·`/meta` 백업 → `backups/product-2026-11-15.json`(512개), `backups/event-products-2026-11-15-phase12.json`(23개), `/meta`는 비어 있음
+- [x] [AI] `npm run build` 성공
+- [x] [AI] 새로 만들거나 고친 파일에서 린트 에러 없음
+- [x] [AI] Playwright로 확인: 1280px 홈에서 버튼을 누르면 `/event/restock`으로 이동한다. 375px에서는 홈 버튼이 보이지 않고, 주소로 들어가면 안내만 보인다.
+- [x] [AI] Playwright로 확인: 이름을 입력하고 새로고침해도 남아 있다 (localStorage만 쓰고 DB에는 쓰지 않음). → 확인 후 DB 조회: `/meta`·`/restock` 비어 있음, `/event/products` 백업과 같음
+- [x] [AI] 저장소 전체에서 실제 이름이 나오지 않는지 검색한다. → 판매내역 엑셀의 고객명 전부(2종)를 저장소 파일 56개와 대조, 일치 0
 - [ ] [사용자] 재고 엑셀을 올린 뒤 정상 저장된다.
 - [ ] [AI] 위 저장 후 `/meta/productUploadedAt`가 오늘 날짜이고, `/product`·`/event/products`가 엑셀·저장 전과 같은지 조회해 확인한다.
 - [ ] [사용자] 페이지·입력칸의 모양과 배치가 괜찮다.

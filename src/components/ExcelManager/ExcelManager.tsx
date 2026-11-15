@@ -12,6 +12,7 @@ import {
   summarizeUpload,
   type UploadSummary,
 } from "../../utils/uploadSummary";
+import { toLocalDateString } from "../../utils/date";
 
 // 엑셀 업로드·데이터 삭제 버튼 (PC 전용)
 // 업로드: 파일 선택 → 검사 → 요약 확인창 → 확인하면 /product 전체 교체 → 저장이 끝난 뒤 결과 알림
@@ -109,9 +110,9 @@ async function uploadExcelFile(file: File) {
     return;
   }
 
-  // 4. /product 전체 교체 (쓰기 한 번) → 끝난 뒤 결과 알림
+  // 4. /product 전체 교체 + 올린 날짜 저장 (쓰기 한 번) → 끝난 뒤 결과 알림
   try {
-    await replaceAllProducts(parsed.products);
+    await replaceAllProducts(parsed.products, toLocalDateString());
   } catch (error) {
     console.error(error);
     alert("저장에 실패했습니다. 상품 데이터는 업로드 전 그대로입니다.");

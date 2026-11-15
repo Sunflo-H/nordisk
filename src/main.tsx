@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import { BrowserRouter, Route, Routes } from "react-router";
 import Home from "./pages/Home.tsx";
 import EventInventory from "./pages/EventInventory.tsx";
+import EventRestock from "./pages/EventRestock.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -13,6 +14,7 @@ createRoot(document.getElementById("root")!).render(
         <Route index element={<Home />} />
         <Route path="inventory" element={<App />} />
         <Route path="event" element={<EventInventory />} />
+        <Route path="event/restock" element={<EventRestock />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>

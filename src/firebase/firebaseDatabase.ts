@@ -49,10 +49,18 @@ async function readAllProducts(): Promise<ProductType[]> {
   }));
 }
 
-// /product를 받은 상품 목록으로 통째로 바꾼다 (새 목록에 없는 상품은 지워진다).
-// 쓰기 한 번이라 전부 성공하거나 전부 실패한다. 실패하면 DB는 그대로다.
-// 빈 목록·잘못된 상품코드·중복 상품코드는 쓰기 전에 막는다 (빈 값으로 /product를 날리지 않도록).
-async function replaceAllProducts(products: ProductType[]): Promise<void> {
+// 재고 엑셀을 올린 날짜를 저장하는 경로 ("YYYY-MM-DD")
+const PRODUCT_UPLOADED_AT_PATH = "meta/productUploadedAt";
+
+// /product를 받은 상품 목록으로 통째로 바꾸고, /meta/productUploadedAt에 올린 날짜를 함께 저장한다.
+// 새 목록에 없는 상품은 지워진다. 두 경로를 쓰기 한 번(update)으로 묶어 전부 성공하거나 전부 실패한다.
+// 빈 목록·잘못된 상품코드·중복 상품코드·잘못된 날짜는 쓰기 전에 막는다 (빈 값으로 /product를 날리지 않도록).
+async function replaceAllProducts(
+  products: ProductType[],
+  uploadedAt: string
+): Promise<void> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(uploadedAt))
+    throw new Error(`잘못된 업로드 날짜입니다: "${uploadedAt}"`);
   if (products.length === 0) throw new Error("저장할 상품이 없습니다.");
   const productMap: Record<string, ProductType> = {};
   for (const product of products) {
@@ -63,7 +71,11 @@ async function replaceAllProducts(products: ProductType[]): Promise<void> {
       throw new Error(`중복된 상품코드가 있습니다: "${code}"`);
     productMap[code] = product;
   }
-  await set(ref(db, "product"), productMap);
+  // 다중 경로 update에서 각 경로 값은 통째로 바뀐다 (/product 전체 교체와 같다)
+  await update(ref(db), {
+    product: productMap,
+    [PRODUCT_UPLOADED_AT_PATH]: uploadedAt,
+  });
 }
 
 function updateData(updatedProduct: ProductType): void {
