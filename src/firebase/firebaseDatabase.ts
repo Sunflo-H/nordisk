@@ -78,6 +78,15 @@ async function replaceAllProducts(
   });
 }
 
+// 재고 엑셀을 올린 날짜를 읽는다. 아직 저장된 적이 없거나 형식이 다르면 null.
+async function readProductUploadedAt(): Promise<string | null> {
+  const snapshot = await get(child(dbRef, PRODUCT_UPLOADED_AT_PATH));
+  const value: unknown = snapshot.val();
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? value
+    : null;
+}
+
 function updateData(updatedProduct: ProductType): void {
   // Write the new post's data simultaneously in the posts list and the user's post list.
   const updates: UpdatedDataType = {
@@ -164,6 +173,7 @@ export {
   readData,
   readAllProducts,
   replaceAllProducts,
+  readProductUploadedAt,
   updateData,
   deleteData,
   readEventCategories,

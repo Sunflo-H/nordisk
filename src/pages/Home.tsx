@@ -1,10 +1,13 @@
 import { Link } from "react-router";
 import ExcelManager from "../components/ExcelManager/ExcelManager";
+import StockDate from "../components/StockDate/StockDate";
 
 // 앱 시작 화면: 재고 관리·행사장 재고 관리 페이지로 이동하는 네비게이션과 엑셀 데이터 관리 버튼을 제공한다.
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="relative min-h-screen bg-gray-50 text-gray-800">
+      {/* 재고 엑셀을 올린 날짜: 가운데 버튼과 겹치지 않게 화면 왼쪽 위에 둔다 */}
+      <StockDate className="absolute top-3 left-4" />
       <div className="max-w-[320px] m-auto px-4 pt-16 flex flex-col gap-8">
         <header className="text-2xl font-bold text-center">노르디스크</header>
 
