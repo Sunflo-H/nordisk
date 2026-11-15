@@ -18,7 +18,7 @@ const EventRestock = () => {
 
       {/* PC 전용 내용 */}
       <div className="hidden sm:block max-w-[1200px] m-auto px-4 mt-6">
-        <section className="max-w-[480px] p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+        <section className="max-w-[480px] mx-auto p-4 bg-white rounded-xl shadow-sm border border-gray-200">
           <label
             htmlFor="store-sale-name"
             className="block font-semibold mb-1"
