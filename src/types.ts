@@ -69,3 +69,13 @@ export type FilterOptionsType = {
   gender: string[];
   category: string[];
 };
+
+// 행사장 상품 분류 (DB /event/products 값)
+// event_only: 행사장에만 있음, both: 행사장·매장 둘 다, unclassified: 아직 분류 안 함(예전 값 true)
+export type EventCategory = "event_only" | "both" | "unclassified";
+
+// 상품코드 → 행사장 분류
+export type EventCategoryMap = Record<string, EventCategory>;
+
+// 상품 카드에 보여 줄 재고 위치 (행사장 목록에 없으면 store_only)
+export type StockLocation = EventCategory | "store_only";

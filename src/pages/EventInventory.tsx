@@ -14,6 +14,7 @@ const EventInventory = () => {
   const {
     eventProducts,
     eventProductCodes,
+    eventCategories,
     allProducts,
     isLoaded,
     errorMessage,
@@ -67,7 +68,7 @@ const EventInventory = () => {
       type="button"
       onClick={() => handleRemoveOne(product.상품코드)}
       disabled={isRemoving}
-      className="hidden sm:block px-3 py-1 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed"
+      className="hidden sm:block px-3 py-1 text-sm whitespace-nowrap text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed"
     >
       빼기
     </button>
@@ -93,9 +94,12 @@ const EventInventory = () => {
           </button>
           <div className={isPickerOpen ? "" : "hidden"}>
             <EventProductPicker
-              key={[...eventProductCodes].sort().join(",")}
+              key={Object.entries(eventCategories)
+                .map(([code, category]) => `${code}:${category}`)
+                .sort()
+                .join(",")}
               allProducts={allProducts}
-              eventProductCodes={eventProductCodes}
+              eventCategories={eventCategories}
               onSaved={reload}
             />
           </div>
@@ -130,6 +134,7 @@ const EventInventory = () => {
           <ProductListView
             products={eventProducts}
             renderCardAction={renderRemoveButton}
+            eventCategories={eventCategories}
           />
         )}
       </div>

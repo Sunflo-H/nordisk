@@ -1,6 +1,11 @@
 import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
-import type { ProductType, UpdatedDataType } from "../types";
+import type {
+  EventCategory,
+  EventCategoryMap,
+  ProductType,
+  UpdatedDataType,
+} from "../types";
 import "./firebaseConfig";
 
 const db = getDatabase();
@@ -84,15 +89,30 @@ function deleteData() {
 }
 
 // ===== 행사장(/event) 관련 함수 =====
-// 저장 구조: /event/products/{상품코드}: true (상품코드만 저장, 재고는 /product에서 읽는다)
+// 저장 구조: /event/products/{상품코드}: "event_only" | "both" | true
+// (상품코드와 분류만 저장, 재고는 /product에서 읽는다. 예전 값 true는 "미분류"로 읽는다)
 const EVENT_PRODUCTS_PATH = "event/products";
 
-// 행사장에 등록된 상품코드 목록을 읽는다. 비어 있으면 빈 배열을 돌려준다.
-async function readEventProductCodes(): Promise<string[]> {
+// DB 값 → 분류. 예전 값 true나 알 수 없는 값은 미분류로 본다.
+function toEventCategory(value: unknown): EventCategory {
+  return value === "event_only" || value === "both" ? value : "unclassified";
+}
+
+// 분류 → DB 값. 미분류는 예전과 같은 true로 저장한다.
+function toEventProductValue(category: EventCategory): "event_only" | "both" | true {
+  return category === "unclassified" ? true : category;
+}
+
+// 행사장에 등록된 상품코드와 분류를 읽는다. 비어 있으면 빈 객체를 돌려준다.
+async function readEventCategories(): Promise<EventCategoryMap> {
   const snapshot = await get(child(dbRef, EVENT_PRODUCTS_PATH));
-  if (!snapshot.exists()) return [];
-  const value = snapshot.val() as Record<string, boolean>;
-  return Object.keys(value);
+  if (!snapshot.exists()) return {};
+  const value = snapshot.val() as Record<string, unknown>;
+  const categories: EventCategoryMap = {};
+  for (const [code, raw] of Object.entries(value)) {
+    categories[code] = toEventCategory(raw);
+  }
+  return categories;
 }
 
 // 상품코드를 다듬어 돌려준다. 비어 있거나 Firebase 키로 쓸 수 없는 문자가 있으면 null.
@@ -103,14 +123,14 @@ function toSafeProductCode(productCode: string): string | null {
   return code;
 }
 
-// 행사장 목록을 받은 상품코드 목록으로 통째로 바꾼다. 빈 배열이면 목록을 비운다.
+// 행사장 목록을 받은 상품코드·분류로 통째로 바꾼다. 빈 객체면 목록을 비운다.
 // async로 두어 Firebase의 동기 예외도 Promise 거부로 전달되게 한다.
-async function saveEventProductCodes(productCodes: string[]): Promise<void> {
-  const products: Record<string, true> = {};
-  for (const productCode of productCodes) {
+async function saveEventCategories(categories: EventCategoryMap): Promise<void> {
+  const products: Record<string, "event_only" | "both" | true> = {};
+  for (const [productCode, category] of Object.entries(categories)) {
     const code = toSafeProductCode(productCode);
     if (!code) throw new Error(`잘못된 상품코드가 있습니다: "${productCode}"`);
-    products[code] = true;
+    products[code] = toEventProductValue(category);
   }
   const value = Object.keys(products).length > 0 ? products : null;
   await set(ref(db, EVENT_PRODUCTS_PATH), value);
@@ -134,8 +154,8 @@ export {
   replaceAllProducts,
   updateData,
   deleteData,
-  readEventProductCodes,
-  saveEventProductCodes,
+  readEventCategories,
+  saveEventCategories,
   removeEventProductCode,
   clearEventProductCodes,
 };

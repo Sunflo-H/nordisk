@@ -1,5 +1,9 @@
 import { useMemo, useState, type ReactNode } from "react";
-import type { FilterOptionsType, ProductType } from "../../types";
+import type {
+  EventCategoryMap,
+  FilterOptionsType,
+  ProductType,
+} from "../../types";
 import Filter from "../Filter/Filter";
 import ProductCard from "../ProductCard/ProductCard";
 import {
@@ -8,11 +12,14 @@ import {
   emptyFilterOptions,
   getFilteredData,
 } from "../../utils/productFilter";
+import { getStockLocation } from "../../utils/stockLocation";
 
 type ProductListViewProps = {
   products: ProductType[];
   // 상품 카드마다 붙일 추가 버튼 등 (선택). /inventory에서는 넘기지 않는다.
   renderCardAction?: (product: ProductType) => ReactNode;
+  // 행사장 분류 (선택). 넘기면 카드마다 "행사장만 / 매장만 / 둘 다" 배지를 붙인다.
+  eventCategories?: EventCategoryMap;
 };
 
 // 상품 배열을 받아 필터 + 상품 카드 목록을 보여주는 공용 컴포넌트
@@ -20,6 +27,7 @@ type ProductListViewProps = {
 const ProductListView: React.FC<ProductListViewProps> = ({
   products,
   renderCardAction,
+  eventCategories,
 }) => {
   // 실제로 적용된 필터 값 (패널에서 "적용"을 눌렀을 때만 바뀐다)
   const [filterOptions, setFilterOptions] =
@@ -72,6 +80,10 @@ const ProductListView: React.FC<ProductListViewProps> = ({
               product={product}
               key={product.상품코드}
               action={renderCardAction?.(product)}
+              stockLocation={
+                eventCategories &&
+                getStockLocation(eventCategories, product.상품코드)
+              }
             />
           ))
         ) : (

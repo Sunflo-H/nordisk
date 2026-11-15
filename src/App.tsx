@@ -1,11 +1,18 @@
 import "./App.css";
 import PageHeader from "./components/PageHeader/PageHeader";
 import ProductListView from "./components/ProductList/ProductListView";
+import useEventCategories from "./hooks/useEventCategories";
 import useProducts from "./hooks/useProducts";
 
 // 노르디스크 재고 관리 페이지 (/inventory): 전체 상품 재고 조회
 function App() {
   const { products, isLoaded, errorMessage } = useProducts();
+  // 카드의 "행사장만 / 매장만 / 둘 다" 배지용. 못 읽으면 배지 없이 목록만 보여 준다.
+  const eventCategoriesState = useEventCategories();
+  const eventCategories =
+    eventCategoriesState.isLoaded && !eventCategoriesState.errorMessage
+      ? eventCategoriesState.eventCategories
+      : undefined;
 
   // 상품 목록을 다 읽었는데 등록된 상품이 없을 때 안내 문구를 보여 준다
   const isEmpty = isLoaded && !errorMessage && products.length === 0;
@@ -23,7 +30,12 @@ function App() {
         {isEmpty && (
           <p className="text-center text-gray-500">등록된 상품이 없습니다</p>
         )}
-        {products.length > 0 && <ProductListView products={products} />}
+        {products.length > 0 && (
+          <ProductListView
+            products={products}
+            eventCategories={eventCategories}
+          />
+        )}
       </div>
     </div>
   );
