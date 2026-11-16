@@ -3,6 +3,7 @@ import {
   changeRestockItemStatus,
   deleteRestockItem,
   setRestockReturnChecked,
+  StaleRestockItemError,
   type RestockLists,
   type RestockStatusChange,
 } from "../../firebase/firebaseDatabase";
@@ -26,7 +27,7 @@ type RestockBoardProps = {
 
 type ItemLine = Pick<RestockItem, "상품코드" | "칼라" | "사이즈" | "사이즈명">;
 
-// 챙길 목록 화면 (PC 전용 페이지 안에서만 쓰인다)
+// 챙길 목록 화면 (PC는 표, 폰·워치는 카드로 보여 준다. 모든 기능을 모든 기기에서 쓴다)
 // 상태 바꾸기·확인함·지우기는 DB 저장이 끝난 뒤에만 화면을 바꾸고, 실패하면 그대로 둔다.
 const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
   // 지금 재고·상품명 표시용 (못 읽어도 목록은 보여 준다)
@@ -70,14 +71,34 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     }
   };
 
-  const handleChangeStatus = (id: string, change: RestockStatusChange) =>
-    runSaving(id, async () => {
-      const item = lists.items[id];
+  const handleChangeStatus = (id: string, change: RestockStatusChange) => {
+    const item = lists.items[id];
+    // 못 챙김 → 챙길 것으로 되돌리면 기준재고가 지워져 그 사이 입고를 놓칠 수 있다. 취소하면 DB에 쓰지 않는다.
+    if (
+      change.상태 === "pending" &&
+      item.상태 === "notPacked" &&
+      !window.confirm(
+        `챙길 것으로 되돌릴까요?\n${describe(item)}\n\n적어 둔 기준재고(${item.기준재고 ?? "-"}, ${item.기준일 ?? "-"})가 지워집니다. 다시 못 챙김을 누르면 그때 재고로 새로 적혀, 그 사이 들어온 입고를 놓칠 수 있습니다.`
+      )
+    )
+      return;
+    void runSaving(id, async () => {
       let saved: RestockItem;
       try {
-        saved = await changeRestockItemStatus(id, change);
+        saved = await changeRestockItemStatus(id, change, item.상태);
       } catch (error) {
         console.error(error);
+        if (error instanceof StaleRestockItemError) {
+          // 화면을 DB의 지금 상태로 바꾸고 알린다 (DB에는 쓰지 않음)
+          const current = error.current;
+          setLists((prev) =>
+            prev ? { ...prev, items: { ...prev.items, [id]: current } } : prev
+          );
+          alert(
+            `다른 기기에서 먼저 바뀐 항목이라 저장하지 않았습니다.\n${describe(item)} → 지금 상태: ${describeStatus(current)}\n화면을 지금 상태로 바꿨으니 다시 확인해 주세요.`
+          );
+          return;
+        }
         alert(
           `저장하지 못했습니다. 화면은 그대로입니다.\n${error instanceof Error ? error.message : ""}`
         );
@@ -88,6 +109,7 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
       );
       setMessage(`${describe(item)} → ${describeStatus(saved)} 저장했습니다.`);
     });
+  };
 
   const handleDelete = (id: string) => {
     const item = lists.items[id];

@@ -24,10 +24,10 @@ const Home = () => {
           >
             행사장 재고 관리
           </Link>
-          {/* 행사장 판매분 챙기기는 PC 전용이라 모바일에서는 버튼을 숨긴다 */}
+          {/* 행사장 판매분 챙기기는 폰·워치에서도 쓰므로 모든 화면에서 보인다 */}
           <Link
             to="/event/restock"
-            className="hidden sm:block w-full py-3 bg-white text-emerald-600! text-center font-semibold rounded-xl shadow-md border border-emerald-500 hover:bg-emerald-50 transition-colors"
+            className="block w-full py-3 bg-white text-emerald-600! text-center font-semibold rounded-xl shadow-md border border-emerald-500 hover:bg-emerald-50 transition-colors"
           >
             행사장 판매분 챙기기
           </Link>

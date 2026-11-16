@@ -16,6 +16,7 @@ import type {
   RestockItem,
   RestockReason,
   RestockReturn,
+  RestockStatus,
   SalesDateInfo,
   UpdatedDataType,
 } from "../types";
@@ -264,24 +265,41 @@ export type RestockStatusChange =
   | { 상태: "packed" }
   | { 상태: "notPacked"; 사유: RestockReason };
 
+// 화면에 보이던 상태와 DB의 지금 상태가 다를 때 (다른 기기에서 먼저 바꾼 경우).
+// current는 DB의 지금 항목이라 화면을 이것으로 바꾸면 된다.
+class StaleRestockItemError extends Error {
+  readonly current: RestockItem;
+  constructor(current: RestockItem) {
+    super("다른 기기에서 먼저 바뀐 항목입니다.");
+    this.name = "StaleRestockItemError";
+    this.current = current;
+  }
+}
+
 // 챙길 목록 항목 하나의 상태를 바꾸고, 저장된 항목을 돌려준다.
+// expectedStatus는 화면에 보이던 상태다. DB의 지금 상태가 다르면 쓰지 않고 StaleRestockItemError를 던진다
+// (예: 폰 화면에는 챙김인데 PC에서 못 챙김으로 바꾼 항목을 되돌려 기준재고가 경고 없이 지워지는 것을 막는다).
 // 못 챙김으로 바꿀 때 그 칼라·사이즈의 지금 재고(/product)와 재고 날짜(/meta/productUploadedAt)를
 // 기준재고·기준일로 함께 저장한다. 이미 못 챙김인 항목의 사유만 바꿀 때는 기준을 그대로 둔다
 // (기준을 새로 잡으면 그 사이 들어온 입고를 놓치게 되므로).
 // 확인과 쓰기 사이에 다른 곳에서 항목을 지워도 반쪽 항목이 생기지 않도록 트랜잭션으로 쓴다.
 async function changeRestockItemStatus(
   id: string,
-  change: RestockStatusChange
+  change: RestockStatusChange,
+  expectedStatus: RestockStatus
 ): Promise<RestockItem> {
   const itemRef = ref(db, `${RESTOCK_PATH}/items/${toSafeKey(id)}`);
   const snapshot = await get(itemRef);
   if (!isRestockLine(snapshot.val())) throw new Error("챙길 목록에 없는 항목입니다.");
   const current = snapshot.val() as RestockItem;
+  if (current.상태 !== expectedStatus) throw new StaleRestockItemError(current);
   // 못 챙김으로 바꿀 때 쓸 새 기준 (트랜잭션 함수는 동기라 미리 읽어 둔다)
   const baseline =
     change.상태 === "notPacked" ? await readStockBaseline(current) : null;
 
   let isMissing = false;
+  // 콜백 안에서만 바뀌므로 null로 좁혀지지 않게 단언으로 선언한다
+  let staleItem = null as RestockItem | null;
   const result = await runTransaction(itemRef, (value: unknown) => {
     // 처음에는 로컬 캐시 값(null)으로 불릴 수 있다. null을 돌려주면 서버 값과 다를 때 다시 불린다.
     if (value === null) return null;
@@ -290,6 +308,11 @@ async function changeRestockItemStatus(
       return undefined; // 형식이 다른 값은 건드리지 않고 중단
     }
     const item = value as RestockItem;
+    // 읽은 뒤 쓰기 전 사이에 다른 기기에서 상태를 바꿨으면 중단
+    if (item.상태 !== expectedStatus) {
+      staleItem = item;
+      return undefined;
+    }
     const next: RestockItem = { ...item, 상태: change.상태 };
     delete next.사유;
     delete next.기준재고;
@@ -305,6 +328,7 @@ async function changeRestockItemStatus(
     }
     return next;
   });
+  if (staleItem) throw new StaleRestockItemError(staleItem);
   const saved: unknown = result.snapshot.val();
   if (isMissing || !result.committed || !isRestockLine(saved))
     throw new Error("챙길 목록에 없는 항목입니다. 새로고침해 주세요.");
@@ -364,6 +388,7 @@ async function deleteRestockItem(id: string): Promise<void> {
 
 export {
   SalesDateConflictError,
+  StaleRestockItemError,
   readSalesDates,
   saveSalesUpload,
   readRestockLists,

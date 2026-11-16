@@ -36,23 +36,28 @@ const ReturnCheckList = ({
         <ul className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
           {entries.map(({ id, value: item }) => (
             <li key={id} data-testid="restock-return-row">
-              <label className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer">
+              {/* PC는 한 줄, 폰·워치는 체크박스 옆에 내용을 여러 줄로 감싼다 */}
+              <label className="flex items-start sm:items-center gap-3 px-3 py-3 sm:py-2 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={item.확인함 === true}
                   disabled={savingIds.has(id)}
                   onChange={(e) => onToggle(id, e.target.checked)}
-                  className="w-4 h-4 accent-emerald-500"
+                  className="shrink-0 mt-0.5 sm:mt-0 w-6 h-6 sm:w-4 sm:h-4 accent-emerald-500"
                 />
-                <span className="whitespace-nowrap">{item.판매일자}</span>
-                <span className="font-mono">{item.상품코드}</span>
-                <span className="flex-1">{getProductName(item)}</span>
-                <span className="whitespace-nowrap">
-                  {item.칼라} / {item.사이즈명 || item.사이즈}
-                </span>
-                <span className="whitespace-nowrap text-red-500">수량 {item.수량}</span>
-                <span className="whitespace-nowrap text-gray-500 w-14 text-right">
-                  {item.확인함 ? "확인함" : ""}
+                <span className="min-w-0 flex-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                  <span className="whitespace-nowrap">{item.판매일자}</span>
+                  <span className="font-mono break-all">{item.상품코드}</span>
+                  <span className="basis-full sm:basis-auto sm:flex-1 break-words">
+                    {getProductName(item)}
+                  </span>
+                  <span className="whitespace-nowrap">
+                    {item.칼라} / {item.사이즈명 || item.사이즈}
+                  </span>
+                  <span className="whitespace-nowrap text-red-500">수량 {item.수량}</span>
+                  <span className="whitespace-nowrap text-gray-500 sm:w-14 sm:text-right">
+                    {item.확인함 ? "확인함" : ""}
+                  </span>
                 </span>
               </label>
             </li>

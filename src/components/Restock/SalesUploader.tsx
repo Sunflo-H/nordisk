@@ -16,7 +16,7 @@ type SalesUploaderProps = {
   onSaved: () => Promise<void>;
 };
 
-// 판매내역 업로드 (PC 전용 페이지 안에서만 쓰인다)
+// 판매내역 업로드 (PC·폰·워치 모두 쓴다)
 // 파일 선택 → 검사·판별 → 미리보기 확인창 → 확인하면 /restock에 쓰기 한 번 → 끝난 뒤 결과 알림
 const SalesUploader = ({ storeSaleName, onSaved }: SalesUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
