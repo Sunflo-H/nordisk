@@ -1,6 +1,7 @@
 import type {
   DailySales,
   RestockItem,
+  RestockPresale,
   RestockReturn,
   SalesDateInfo,
   SalesLine,
@@ -16,6 +17,7 @@ export type SalesDateSummary = {
   rowCount: number; // 판매내역 줄 수 (매장·행사장 모두)
   eventLineCount: number; // 행사장 판매 줄 수 (매장 판매 표시 이름 제외, 반품 줄 포함)
   itemCount: number; // 챙길 목록 항목 수 (판매 줄마다 한 항목)
+  presaleCount: number; // 선판매 목록 항목 수 (지금 재고가 음수인 칸의 판매 줄)
   returnCount: number; // 반품·교환 확인 필요 항목 수
 };
 
@@ -25,8 +27,12 @@ export type SalesUploadPlan = {
   salesDates: Record<string, SalesDateInfo>;
   sales: Record<string, DailySales>;
   items: Record<string, RestockItem>;
+  presales: Record<string, RestockPresale>;
   returns: Record<string, RestockReturn>;
 };
+
+// 상품코드·칼라·사이즈의 지금 재고 (/product). 재고 엑셀에 없으면 undefined.
+export type StockLookup = (상품코드: string, 칼라: string, 사이즈: SizeKey) => number | undefined;
 
 // 같은 날짜·상품·칼라·사이즈를 하나로 묶는 키. returns의 id로 쓰고,
 // items의 id는 여기에 판매 줄 순번을 붙인다 ("…_1", "…_2").
@@ -36,11 +42,14 @@ export function toRestockId(line: Pick<SalesLine, "판매일자" | "상품코드
 }
 
 // eventCodes: 행사장 목록 상품코드, uploadedDates: 이미 올린 판매일자, uploadedAt: 오늘 날짜
+// getStock: 지금 재고. 음수(선판매)인 칸의 행사장 판매는 챙길 목록 대신 선판매 목록에 넣는다.
+// 재고 0·양수·재고 엑셀에 없는 칸은 챙길 목록에 넣는다. 판매 기록(sales)은 어느 쪽이든 그대로 넣는다.
 export function planSalesUpload(
   lines: SalesLine[],
   eventCodes: ReadonlySet<string>,
   uploadedDates: ReadonlySet<string>,
-  uploadedAt: string
+  uploadedAt: string,
+  getStock: StockLookup
 ): SalesUploadPlan {
   // 날짜별로 나눈다
   const linesByDate = new Map<string, SalesLine[]>();
@@ -57,6 +66,7 @@ export function planSalesUpload(
     salesDates: {},
     sales: {},
     items: {},
+    presales: {},
     returns: {},
   };
 
@@ -83,6 +93,7 @@ export function planSalesUpload(
     }
 
     let itemCount = 0;
+    let presaleCount = 0;
     let returnCount = 0;
     for (const [id, groupLines] of grouped) {
       const { remainingSales, unmatchedReturn } = cancelReturns(groupLines);
@@ -95,10 +106,19 @@ export function planSalesUpload(
         사이즈: first.사이즈,
         사이즈명: first.사이즈명,
       };
-      // 챙길 목록은 판매 줄(영수증)마다 따로 만든다 (하나는 챙김, 하나는 못 챙김으로 나눠 처리할 수 있게)
+      // 지금 재고가 음수면 선판매 (재고 없이 먼저 팔고 본사에서 받아 택배로 보내는 상품)
+      const stock = getStock(first.상품코드, first.칼라, first.사이즈);
+      const isPresale = typeof stock === "number" && stock < 0;
+      // 챙길 목록·선판매 목록은 판매 줄(영수증)마다 따로 만든다 (하나는 챙김, 하나는 못 챙김으로 나눠 처리할 수 있게)
       remainingSales.forEach((수량, index) => {
-        plan.items[`${id}_${index + 1}`] = { ...base, 수량, 상태: "pending" };
-        itemCount += 1;
+        const lineId = `${id}_${index + 1}`;
+        if (isPresale) {
+          plan.presales[lineId] = { ...base, 수량, 등록완료: false };
+          presaleCount += 1;
+        } else {
+          plan.items[lineId] = { ...base, 수량, 상태: "pending" };
+          itemCount += 1;
+        }
       });
       if (unmatchedReturn < 0) {
         // 짝이 없는 반품은 자동으로 처리하지 않고 확인 목록으로 보낸다
@@ -112,6 +132,7 @@ export function planSalesUpload(
       rowCount: dateLines.length,
       eventLineCount: eventLines.length,
       itemCount,
+      presaleCount,
       returnCount,
     });
   }

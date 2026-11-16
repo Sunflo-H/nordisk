@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import {
   SalesDateConflictError,
+  readAllProducts,
   readEventCategories,
   readSalesDates,
   saveSalesUpload,
@@ -97,22 +98,27 @@ async function uploadSalesFile(file: File, storeSaleName: string): Promise<boole
     return false;
   }
 
-  // 2. 행사장 목록·이미 올린 날짜를 읽어 계획 만들기
+  // 2. 행사장 목록·이미 올린 날짜·지금 재고를 읽어 계획 만들기
+  // (재고를 못 읽으면 선판매를 가를 수 없으므로 저장하지 않는다)
   let plan: SalesUploadPlan;
   try {
-    const [eventCategories, uploadedDates] = await Promise.all([
+    const [eventCategories, uploadedDates, products] = await Promise.all([
       readEventCategories(),
       readSalesDates(),
+      readAllProducts(),
     ]);
+    const productMap = new Map(products.map((product) => [product.상품코드, product]));
     plan = planSalesUpload(
       parsed.lines,
       new Set(Object.keys(eventCategories)),
       uploadedDates,
-      toLocalDateString()
+      toLocalDateString(),
+      (상품코드, 칼라, 사이즈) =>
+        productMap.get(상품코드)?.재고?.[칼라]?.[사이즈]
     );
   } catch (error) {
     console.error(error);
-    alert("행사장 목록이나 올린 판매일자를 읽지 못했습니다. 저장하지 않았습니다.");
+    alert("행사장 목록, 올린 판매일자, 재고 중 하나를 읽지 못했습니다. 저장하지 않았습니다.");
     return false;
   }
 
@@ -144,9 +150,10 @@ async function uploadSalesFile(file: File, storeSaleName: string): Promise<boole
     return false;
   }
   const itemCount = Object.keys(plan.items).length;
+  const presaleCount = Object.keys(plan.presales).length;
   const returnCount = Object.keys(plan.returns).length;
   const lines = [
-    `저장했습니다. (판매일자 ${plan.summaries.length}일, 챙길 목록 ${itemCount}개, 반품 확인 ${returnCount}개)`,
+    `저장했습니다. (판매일자 ${plan.summaries.length}일, 챙길 목록 ${itemCount}개, 선판매 ${presaleCount}개, 반품 확인 ${returnCount}개)`,
   ];
   if (plan.skippedDates.length > 0) {
     lines.push(`이미 저장되어 있어 건너뛴 판매일자: ${plan.skippedDates.join(", ")}`);
@@ -160,12 +167,17 @@ function formatPreview(fileName: string, plan: SalesUploadPlan) {
   const lines = [`"${fileName}" 판매내역을 저장합니다.`, ""];
   for (const summary of plan.summaries) {
     lines.push(
-      `· ${summary.판매일자}: 판매 ${summary.rowCount}줄 / 행사장 판매 ${summary.eventLineCount}줄 → 챙길 목록 ${summary.itemCount}개, 반품 확인 ${summary.returnCount}개`
+      `· ${summary.판매일자}: 판매 ${summary.rowCount}줄 / 행사장 판매 ${summary.eventLineCount}줄 → 챙길 목록 ${summary.itemCount}개, 선판매 ${summary.presaleCount}개, 반품 확인 ${summary.returnCount}개`
     );
   }
   if (plan.skippedDates.length > 0) {
     lines.push("", `이미 저장되어 있어 건너뛸 판매일자: ${plan.skippedDates.join(", ")}`);
   }
-  lines.push("", "저장할까요?");
+  lines.push(
+    "",
+    "선판매: 지금 재고가 음수인 칸의 판매입니다. 챙길 목록 대신 선판매 목록에 넣습니다. (오늘 재고 엑셀을 먼저 올렸는지 확인해 주세요)",
+    "",
+    "저장할까요?"
+  );
   return lines.join("\n");
 }

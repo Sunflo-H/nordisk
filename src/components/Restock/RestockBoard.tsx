@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   changeRestockItemStatus,
   deleteRestockItem,
+  setRestockPresaleRegistered,
   setRestockReturnChecked,
   StaleRestockItemError,
   type RestockLists,
@@ -9,7 +10,7 @@ import {
 } from "../../firebase/firebaseDatabase";
 import useProducts from "../../hooks/useProducts";
 import useProductUploadedAt from "../../hooks/useProductUploadedAt";
-import type { ProductType, RestockItem, RestockReturn } from "../../types";
+import type { ProductType, RestockItem, RestockPresale, RestockReturn } from "../../types";
 import { computeArrival, type ArrivalResult } from "../../utils/restockArrival";
 import {
   groupByStatus,
@@ -17,6 +18,7 @@ import {
   restockStatusGroups,
   sortRestockEntries,
 } from "../../utils/restockView";
+import PresaleList, { PresaleToggleButton } from "./PresaleList";
 import RestockItemTable from "./RestockItemTable";
 import ReturnCheckList from "./ReturnCheckList";
 import SalesDateList from "./SalesDateList";
@@ -55,6 +57,12 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     [lists.items]
   );
   const returnEntries = useMemo(() => sortRestockEntries(lists.returns), [lists.returns]);
+  // 선판매 목록: 등록 완료하지 않은 항목만 보여 준다
+  const presaleEntries = useMemo(
+    () => sortRestockEntries(lists.presales).filter(({ value }) => value.등록완료 !== true),
+    [lists.presales]
+  );
+  const [isPresaleOpen, setIsPresaleOpen] = useState(false);
 
   // 입고 알림: 못 챙김 항목마다 입고 수를 다시 계산한다 (DB에는 쓰지 않는다).
   // 재고나 재고 날짜를 못 읽었으면 계산하지 않는다 (재고 0으로 잘못 계산하지 않도록).
@@ -98,7 +106,7 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     if (!product) return null;
     return product.재고?.[item.칼라]?.[item.사이즈] ?? 0;
   };
-  const getProductName = (item: RestockItem | RestockReturn): string =>
+  const getProductName = (item: RestockItem | RestockReturn | RestockPresale): string =>
     item.상품명 || productMap.get(item.상품코드)?.상품명 || "-";
 
   // 같은 항목을 저장하는 동안 버튼을 막는다
@@ -204,9 +212,46 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
       );
     });
 
+  const handleRegisterPresale = (id: string) =>
+    runSaving(id, async () => {
+      const item = lists.presales[id];
+      try {
+        await setRestockPresaleRegistered(id, true);
+      } catch (error) {
+        console.error(error);
+        alert(
+          `저장하지 못했습니다. 화면은 그대로입니다.\n${error instanceof Error ? error.message : ""}`
+        );
+        return;
+      }
+      setLists((prev) =>
+        prev
+          ? {
+              ...prev,
+              presales: { ...prev.presales, [id]: { ...prev.presales[id], 등록완료: true } },
+            }
+          : prev
+      );
+      setMessage(`선판매 ${describe(item)} → 등록 완료 저장했습니다.`);
+    });
+
   return (
     <div className="mt-8 pb-16">
-      <h2 className="text-xl font-bold">챙길 목록</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">챙길 목록</h2>
+        <PresaleToggleButton
+          count={presaleEntries.length}
+          isOpen={isPresaleOpen}
+          onClick={() => setIsPresaleOpen((open) => !open)}
+        />
+      </div>
+      <PresaleList
+        entries={presaleEntries}
+        isOpen={isPresaleOpen}
+        getProductName={getProductName}
+        savingIds={savingIds}
+        onRegister={handleRegisterPresale}
+      />
       <p
         role="status"
         aria-live="polite"

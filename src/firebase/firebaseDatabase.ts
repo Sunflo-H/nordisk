@@ -15,6 +15,7 @@ import type {
   EventCategoryMap,
   ProductType,
   RestockItem,
+  RestockPresale,
   RestockReason,
   RestockReturn,
   RestockStatus,
@@ -227,6 +228,9 @@ async function saveSalesUpload(plan: SalesUploadPlan): Promise<void> {
   for (const [id, item] of Object.entries(plan.items)) {
     updates[`${RESTOCK_PATH}/items/${toSafeKey(id)}`] = item;
   }
+  for (const [id, item] of Object.entries(plan.presales)) {
+    updates[`${RESTOCK_PATH}/presales/${toSafeKey(id)}`] = item;
+  }
   for (const [id, item] of Object.entries(plan.returns)) {
     updates[`${RESTOCK_PATH}/returns/${toSafeKey(id)}`] = item;
   }
@@ -242,20 +246,22 @@ function toSafeKey(key: string): string {
 // 챙길 목록 화면에서 쓰는 /restock 데이터 (sales는 입고 알림 계산용)
 export type RestockLists = {
   items: Record<string, RestockItem>;
+  presales: Record<string, RestockPresale>;
   returns: Record<string, RestockReturn>;
   salesDates: Record<string, SalesDateInfo>;
   sales: Record<string, DailySales>;
 };
 
-// 챙길 목록·반품 확인 목록·올린 판매일자·판매 기록을 읽는다. 비어 있는 경로는 빈 객체.
+// 챙길 목록·선판매 목록·반품 확인 목록·올린 판매일자·판매 기록을 읽는다. 비어 있는 경로는 빈 객체.
 async function readRestockLists(): Promise<RestockLists> {
-  const [items, returns, salesDates, sales] = await Promise.all(
-    ["items", "returns", "salesDates", "sales"].map((name) =>
+  const [items, presales, returns, salesDates, sales] = await Promise.all(
+    ["items", "presales", "returns", "salesDates", "sales"].map((name) =>
       get(child(dbRef, `${RESTOCK_PATH}/${name}`))
     )
   );
   return {
     items: (items.val() ?? {}) as Record<string, RestockItem>,
+    presales: (presales.val() ?? {}) as Record<string, RestockPresale>,
     returns: (returns.val() ?? {}) as Record<string, RestockReturn>,
     salesDates: (salesDates.val() ?? {}) as Record<string, SalesDateInfo>,
     sales: (sales.val() ?? {}) as Record<string, DailySales>,
@@ -383,6 +389,23 @@ async function setRestockReturnChecked(id: string, checked: boolean): Promise<vo
     throw new Error("반품 확인 목록에 없는 항목입니다. 새로고침해 주세요.");
 }
 
+// 선판매 목록의 "등록완료"를 바꾼다. 지우지 않고 표시만 한다 (잘못 눌러도 DB에서 되살릴 수 있게).
+// 없는 항목에 반쪽 항목이 생기지 않도록 트랜잭션으로 쓴다.
+async function setRestockPresaleRegistered(id: string, registered: boolean): Promise<void> {
+  const presaleRef = ref(db, `${RESTOCK_PATH}/presales/${toSafeKey(id)}`);
+  let isMissing = false;
+  const result = await runTransaction(presaleRef, (value: unknown) => {
+    if (value === null) return null;
+    if (!isRestockLine(value)) {
+      isMissing = true;
+      return undefined;
+    }
+    return { ...(value as RestockPresale), 등록완료: registered };
+  });
+  if (isMissing || !result.committed || !isRestockLine(result.snapshot.val()))
+    throw new Error("선판매 목록에 없는 항목입니다. 새로고침해 주세요.");
+}
+
 // 챙길 목록에서 항목 하나를 지운다 (반품·교환을 확인한 뒤 사용자가 직접 고른 항목).
 // 판매 기록(/restock/sales)은 그대로 두어 입고 계산에는 영향이 없다.
 async function deleteRestockItem(id: string): Promise<void> {
@@ -397,6 +420,7 @@ export {
   readRestockLists,
   changeRestockItemStatus,
   setRestockReturnChecked,
+  setRestockPresaleRegistered,
   deleteRestockItem,
   readData,
   readAllProducts,
