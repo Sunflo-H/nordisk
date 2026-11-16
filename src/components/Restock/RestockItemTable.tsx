@@ -1,6 +1,8 @@
 import type { RestockStatusChange } from "../../firebase/firebaseDatabase";
 import type { RestockItem, RestockStatus } from "../../types";
+import type { ArrivalResult } from "../../utils/restockArrival";
 import { restockReasonLabels, type RestockEntry } from "../../utils/restockView";
+import ArrivalNote from "./ArrivalNote";
 
 type RestockItemTableProps = {
   status: RestockStatus;
@@ -14,6 +16,10 @@ type RestockItemTableProps = {
   savingIds: ReadonlySet<string>;
   onChangeStatus: (id: string, change: RestockStatusChange) => void;
   onDelete: (id: string) => void;
+  // 입고 알림 묶음이면 항목 id → 입고 계산 근거 (근거 줄을 함께 보여 준다)
+  arrivals?: ReadonlyMap<string, ArrivalResult>;
+  // data-testid (기본값: restock-group-{status})
+  testId?: string;
 };
 
 // 상태 묶음 하나(챙길 것 / 못 챙김 / 챙김)의 표
@@ -26,10 +32,12 @@ const RestockItemTable = ({
   savingIds,
   onChangeStatus,
   onDelete,
+  arrivals,
+  testId,
 }: RestockItemTableProps) => {
   return (
-    <section className="mt-6" data-testid={`restock-group-${status}`}>
-      <h3 className="font-semibold mb-2">
+    <section className="mt-6" data-testid={testId ?? `restock-group-${status}`}>
+      <h3 className={`font-semibold mb-2 ${arrivals ? "text-sky-700" : ""}`}>
         {label} <span className="text-gray-500 font-normal">{entries.length}개</span>
       </h3>
       {entries.length === 0 ? (
@@ -58,6 +66,7 @@ const RestockItemTable = ({
                 {entries.map(({ id, value: item }) => {
                   const stock = getCurrentStock(item);
                   const isSaving = savingIds.has(id);
+                  const arrival = arrivals?.get(id);
                   return (
                     <tr
                       key={id}
@@ -88,6 +97,7 @@ const RestockItemTable = ({
                             {" "}
                             · 기준재고 {item.기준재고 ?? "-"} ({item.기준일 ?? "-"})
                           </span>
+                          {arrival && <ArrivalNote arrival={arrival} />}
                         </td>
                       )}
                       <td className="px-3 py-2">
@@ -114,6 +124,7 @@ const RestockItemTable = ({
                 item={item}
                 status={status}
                 stock={getCurrentStock(item)}
+                arrival={arrivals?.get(id)}
                 disabled={savingIds.has(id)}
                 onChangeStatus={(change) => onChangeStatus(id, change)}
                 onDelete={() => onDelete(id)}
@@ -133,6 +144,8 @@ type RestockItemCardProps = {
   item: RestockItem;
   status: RestockStatus;
   stock: number | null;
+  // 입고 알림 항목이면 계산 근거
+  arrival?: ArrivalResult;
   disabled: boolean;
   onChangeStatus: (change: RestockStatusChange) => void;
   onDelete: () => void;
@@ -144,6 +157,7 @@ const RestockItemCard = ({
   item,
   status,
   stock,
+  arrival,
   disabled,
   onChangeStatus,
   onDelete,
@@ -151,7 +165,7 @@ const RestockItemCard = ({
   <li
     data-testid="restock-item-card"
     data-item-id={id}
-    className="px-2.5 py-2 bg-white rounded-lg border border-gray-200"
+    className={`px-2.5 py-2 bg-white rounded-lg border ${arrival ? "border-sky-400" : "border-gray-200"}`}
   >
     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
       {/* 상품명 대신 품번(상품코드)을 메인으로 크게 보여 준다 */}
@@ -190,6 +204,7 @@ const RestockItemCard = ({
         </span>
       </p>
     )}
+    {arrival && <ArrivalNote arrival={arrival} />}
     <div className="mt-1.5">
       <MobileItemActions item={item} disabled={disabled} onChangeStatus={onChangeStatus} />
     </div>

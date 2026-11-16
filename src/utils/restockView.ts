@@ -55,14 +55,20 @@ export function findMissingDates(dates: string[]): string[] {
   const sorted = [...dates].filter(isDateString).sort();
   if (sorted.length < 2) return [];
   const uploaded = new Set(sorted);
-  const missing: string[] = [];
+  const last = sorted[sorted.length - 1];
+  return [...listDatesBetween(sorted[0], last), last].filter((date) => !uploaded.has(date));
+}
+
+// from ≤ 날짜 < to 인 날짜 목록 ("YYYY-MM-DD", 날짜 순). from ≥ to 이거나 형식이 틀리면 빈 배열.
+export function listDatesBetween(from: string, to: string): string[] {
+  if (!isDateString(from) || !isDateString(to)) return [];
+  const dates: string[] = [];
   // UTC로 하루씩 더해 시간대·서머타임 영향 없이 날짜만 센다
-  const end = toUtcTime(sorted[sorted.length - 1]);
-  for (let time = toUtcTime(sorted[0]); time <= end; time += DAY_MS) {
-    const date = new Date(time).toISOString().slice(0, 10);
-    if (!uploaded.has(date)) missing.push(date);
+  const end = toUtcTime(to);
+  for (let time = toUtcTime(from); time < end; time += DAY_MS) {
+    dates.push(new Date(time).toISOString().slice(0, 10));
   }
-  return missing;
+  return dates;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;

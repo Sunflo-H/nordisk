@@ -10,6 +10,7 @@ import {
 import type { Dispatch, SetStateAction } from "react";
 import type { SalesUploadPlan } from "../utils/restockPlan";
 import type {
+  DailySales,
   EventCategory,
   EventCategoryMap,
   ProductType,
@@ -238,17 +239,18 @@ function toSafeKey(key: string): string {
   return key;
 }
 
-// 챙길 목록 화면에서 쓰는 /restock 데이터 (입고 계산용 sales는 읽지 않는다)
+// 챙길 목록 화면에서 쓰는 /restock 데이터 (sales는 입고 알림 계산용)
 export type RestockLists = {
   items: Record<string, RestockItem>;
   returns: Record<string, RestockReturn>;
   salesDates: Record<string, SalesDateInfo>;
+  sales: Record<string, DailySales>;
 };
 
-// 챙길 목록·반품 확인 목록·올린 판매일자를 읽는다. 비어 있는 경로는 빈 객체.
+// 챙길 목록·반품 확인 목록·올린 판매일자·판매 기록을 읽는다. 비어 있는 경로는 빈 객체.
 async function readRestockLists(): Promise<RestockLists> {
-  const [items, returns, salesDates] = await Promise.all(
-    ["items", "returns", "salesDates"].map((name) =>
+  const [items, returns, salesDates, sales] = await Promise.all(
+    ["items", "returns", "salesDates", "sales"].map((name) =>
       get(child(dbRef, `${RESTOCK_PATH}/${name}`))
     )
   );
@@ -256,6 +258,7 @@ async function readRestockLists(): Promise<RestockLists> {
     items: (items.val() ?? {}) as Record<string, RestockItem>,
     returns: (returns.val() ?? {}) as Record<string, RestockReturn>,
     salesDates: (salesDates.val() ?? {}) as Record<string, SalesDateInfo>,
+    sales: (sales.val() ?? {}) as Record<string, DailySales>,
   };
 }
 

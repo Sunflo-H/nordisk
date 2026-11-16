@@ -8,7 +8,9 @@ import {
   type RestockStatusChange,
 } from "../../firebase/firebaseDatabase";
 import useProducts from "../../hooks/useProducts";
+import useProductUploadedAt from "../../hooks/useProductUploadedAt";
 import type { ProductType, RestockItem, RestockReturn } from "../../types";
+import { computeArrival, type ArrivalResult } from "../../utils/restockArrival";
 import {
   groupByStatus,
   restockReasonLabels,
@@ -31,7 +33,13 @@ type ItemLine = Pick<RestockItem, "상품코드" | "칼라" | "사이즈" | "사
 // 상태 바꾸기·확인함·지우기는 DB 저장이 끝난 뒤에만 화면을 바꾸고, 실패하면 그대로 둔다.
 const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
   // 지금 재고·상품명 표시용 (못 읽어도 목록은 보여 준다)
-  const { products, errorMessage: productsError } = useProducts();
+  const { products, isLoaded: productsLoaded, errorMessage: productsError } = useProducts();
+  // 지금 재고 날짜 (입고 알림 계산용)
+  const {
+    uploadedAt: stockDate,
+    isLoaded: stockDateLoaded,
+    hasError: stockDateError,
+  } = useProductUploadedAt();
   const productMap = useMemo(() => {
     const map = new Map<string, ProductType>();
     for (const product of products) map.set(product.상품코드, product);
@@ -47,6 +55,43 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     [lists.items]
   );
   const returnEntries = useMemo(() => sortRestockEntries(lists.returns), [lists.returns]);
+
+  // 입고 알림: 못 챙김 항목마다 입고 수를 다시 계산한다 (DB에는 쓰지 않는다).
+  // 재고나 재고 날짜를 못 읽었으면 계산하지 않는다 (재고 0으로 잘못 계산하지 않도록).
+  const canComputeArrival =
+    productsLoaded && !productsError && stockDateLoaded && !stockDateError && !!stockDate;
+  const arrivals = useMemo(() => {
+    const map = new Map<string, ArrivalResult>();
+    if (!canComputeArrival || !stockDate) return map;
+    for (const { id, value: item } of itemGroups.notPacked) {
+      const arrival = computeArrival({
+        item,
+        // 재고 엑셀에 그 상품·칼라·사이즈가 없으면 0 (기준재고를 적을 때와 같은 규칙)
+        currentStock: productMap.get(item.상품코드)?.재고?.[item.칼라]?.[item.사이즈] ?? 0,
+        stockDate,
+        sales: lists.sales,
+        salesDates: lists.salesDates,
+      });
+      if (arrival) map.set(id, arrival);
+    }
+    return map;
+  }, [canComputeArrival, stockDate, itemGroups.notPacked, productMap, lists.sales, lists.salesDates]);
+
+  // 입고 수가 1개 이상인 못 챙김 항목은 맨 위 알림으로 끌어올리고, 못 챙김 묶음에서는 뺀다
+  const arrivedEntries = itemGroups.notPacked.filter(
+    ({ id }) => (arrivals.get(id)?.입고수 ?? 0) >= 1
+  );
+  const arrivedIds = new Set(arrivedEntries.map(({ id }) => id));
+  const arrivedMap = new Map(
+    arrivedEntries.flatMap(({ id }) => {
+      const arrival = arrivals.get(id);
+      return arrival ? [[id, arrival] as const] : [];
+    })
+  );
+  // 못 챙김 항목의 계산 구간 중 판매내역을 올리지 않은 날 (입고를 놓칠 수 있다)
+  const arrivalMissingDates = [
+    ...new Set([...arrivals.values()].flatMap((arrival) => arrival.빠진날)),
+  ].sort();
 
   const getCurrentStock = (item: ItemLine): number | null => {
     const product = productMap.get(item.상품코드);
@@ -175,6 +220,35 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
         </p>
       )}
 
+      {!canComputeArrival &&
+        itemGroups.notPacked.length > 0 &&
+        productsLoaded &&
+        stockDateLoaded && (
+          <p className="text-sm text-red-500">
+            재고 또는 재고 기준일을 읽지 못해 입고 알림을 계산하지 못했습니다.
+          </p>
+        )}
+      {arrivalMissingDates.length > 0 && (
+        <p className="text-sm text-red-500" data-testid="restock-arrival-missing">
+          판매내역이 빠진 날이 있어 입고를 놓칠 수 있습니다:{" "}
+          {arrivalMissingDates.join(", ")}
+        </p>
+      )}
+      {arrivedEntries.length > 0 && (
+        <RestockItemTable
+          status="notPacked"
+          label="행사장으로 보낼 수 있는 상품이 들어왔습니다"
+          entries={arrivedEntries}
+          getCurrentStock={getCurrentStock}
+          getProductName={getProductName}
+          savingIds={savingIds}
+          onChangeStatus={handleChangeStatus}
+          onDelete={handleDelete}
+          arrivals={arrivedMap}
+          testId="restock-group-arrived"
+        />
+      )}
+
       <SalesDateList salesDates={lists.salesDates} />
 
       <ReturnCheckList
@@ -189,7 +263,11 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
           key={status}
           status={status}
           label={label}
-          entries={itemGroups[status]}
+          entries={
+            status === "notPacked"
+              ? itemGroups.notPacked.filter(({ id }) => !arrivedIds.has(id))
+              : itemGroups[status]
+          }
           getCurrentStock={getCurrentStock}
           getProductName={getProductName}
           savingIds={savingIds}
