@@ -3,10 +3,13 @@ import {
   SalesDateConflictError,
   readAllProducts,
   readEventCategories,
+  readProductUploadedAt,
+  readRestockIncoming,
   readSalesDates,
   saveSalesUpload,
 } from "../../firebase/firebaseDatabase";
 import { toLocalDateString } from "../../utils/date";
+import { getPhysicalStock, isIncomingActive } from "../../utils/physicalStock";
 import { planSalesUpload, type SalesUploadPlan } from "../../utils/restockPlan";
 import { parseSalesExcel, type ParseSalesResult } from "../../utils/salesParser";
 
@@ -98,15 +101,20 @@ async function uploadSalesFile(file: File, storeSaleName: string): Promise<boole
     return false;
   }
 
-  // 2. 행사장 목록·이미 올린 날짜·지금 재고를 읽어 계획 만들기
+  // 2. 행사장 목록·이미 올린 날짜·지금 재고·금일 입고를 읽어 계획 만들기
   // (재고를 못 읽으면 선판매를 가를 수 없으므로 저장하지 않는다)
+  // 선판매는 실물재고(전산재고 − 금일 입고)가 음수인지로 가른다 (spec.md "금일 입고 제외")
   let plan: SalesUploadPlan;
+  let incomingApplied = false;
   try {
-    const [eventCategories, uploadedDates, products] = await Promise.all([
+    const [eventCategories, uploadedDates, products, stockDate, incoming] = await Promise.all([
       readEventCategories(),
       readSalesDates(),
       readAllProducts(),
+      readProductUploadedAt(),
+      readRestockIncoming(),
     ]);
+    incomingApplied = isIncomingActive(incoming, stockDate);
     const productMap = new Map(products.map((product) => [product.상품코드, product]));
     plan = planSalesUpload(
       parsed.lines,
@@ -114,11 +122,18 @@ async function uploadSalesFile(file: File, storeSaleName: string): Promise<boole
       uploadedDates,
       toLocalDateString(),
       (상품코드, 칼라, 사이즈) =>
-        productMap.get(상품코드)?.재고?.[칼라]?.[사이즈]
+        getPhysicalStock(
+          productMap.get(상품코드)?.재고?.[칼라]?.[사이즈],
+          incoming,
+          stockDate,
+          상품코드,
+          칼라,
+          사이즈
+        )
     );
   } catch (error) {
     console.error(error);
-    alert("행사장 목록, 올린 판매일자, 재고 중 하나를 읽지 못했습니다. 저장하지 않았습니다.");
+    alert("행사장 목록, 올린 판매일자, 재고, 금일 입고 중 하나를 읽지 못했습니다. 저장하지 않았습니다.");
     return false;
   }
 
@@ -130,7 +145,7 @@ async function uploadSalesFile(file: File, storeSaleName: string): Promise<boole
   }
 
   // 3. 미리보기 확인창 (취소하면 끝)
-  if (!window.confirm(formatPreview(file.name, plan))) {
+  if (!window.confirm(formatPreview(file.name, plan, incomingApplied))) {
     alert("취소했습니다. 아무것도 저장하지 않았습니다.");
     return false;
   }
@@ -163,7 +178,7 @@ async function uploadSalesFile(file: File, storeSaleName: string): Promise<boole
 }
 
 // 미리보기 확인창 문구
-function formatPreview(fileName: string, plan: SalesUploadPlan) {
+function formatPreview(fileName: string, plan: SalesUploadPlan, incomingApplied: boolean) {
   const lines = [`"${fileName}" 판매내역을 저장합니다.`, ""];
   for (const summary of plan.summaries) {
     lines.push(
@@ -176,6 +191,9 @@ function formatPreview(fileName: string, plan: SalesUploadPlan) {
   lines.push(
     "",
     "선판매: 지금 재고가 음수인 칸의 판매입니다. 챙길 목록 대신 선판매 목록에 넣습니다. (오늘 재고 엑셀을 먼저 올렸는지 확인해 주세요)",
+    incomingApplied
+      ? "지금 재고는 금일 입고를 뺀 실물재고로 판단했습니다."
+      : "금일 입고는 올리지 않아 전산재고 그대로 판단했습니다.",
     "",
     "저장할까요?"
   );

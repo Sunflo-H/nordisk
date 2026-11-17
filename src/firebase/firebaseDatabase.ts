@@ -9,17 +9,22 @@ import {
 } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
 import type { SalesUploadPlan } from "../utils/restockPlan";
+import { toLocalDateString } from "../utils/date";
+import { getPhysicalStock } from "../utils/physicalStock";
 import type {
   DailySales,
   EventCategory,
   EventCategoryMap,
+  IncomingQuantities,
   ProductType,
+  RestockIncoming,
   RestockItem,
   RestockPresale,
   RestockReason,
   RestockReturn,
   RestockStatus,
   SalesDateInfo,
+  SizeKey,
   UpdatedDataType,
 } from "../types";
 import "./firebaseConfig";
@@ -243,29 +248,80 @@ function toSafeKey(key: string): string {
   return key;
 }
 
-// 챙길 목록 화면에서 쓰는 /restock 데이터 (sales는 입고 알림 계산용)
+// 챙길 목록 화면에서 쓰는 /restock 데이터 (sales는 입고 알림 계산용, incoming은 실물재고 계산용)
 export type RestockLists = {
   items: Record<string, RestockItem>;
   presales: Record<string, RestockPresale>;
   returns: Record<string, RestockReturn>;
   salesDates: Record<string, SalesDateInfo>;
   sales: Record<string, DailySales>;
+  incoming: RestockIncoming | null;
 };
 
-// 챙길 목록·선판매 목록·반품 확인 목록·올린 판매일자·판매 기록을 읽는다. 비어 있는 경로는 빈 객체.
+// 챙길 목록·선판매 목록·반품 확인 목록·올린 판매일자·판매 기록·금일 입고를 읽는다. 비어 있는 경로는 빈 객체.
 async function readRestockLists(): Promise<RestockLists> {
   const [items, presales, returns, salesDates, sales] = await Promise.all(
     ["items", "presales", "returns", "salesDates", "sales"].map((name) =>
       get(child(dbRef, `${RESTOCK_PATH}/${name}`))
     )
   );
+  const incoming = await readRestockIncoming();
   return {
     items: (items.val() ?? {}) as Record<string, RestockItem>,
     presales: (presales.val() ?? {}) as Record<string, RestockPresale>,
     returns: (returns.val() ?? {}) as Record<string, RestockReturn>,
     salesDates: (salesDates.val() ?? {}) as Record<string, SalesDateInfo>,
     sales: (sales.val() ?? {}) as Record<string, DailySales>,
+    incoming,
   };
+}
+
+// ===== 금일 입고(/restock/incoming) =====
+// 하루치 하나만 둔다. 다시 올리면 통째로 덮어쓴다 (2026-11-17 사용자 승인).
+const INCOMING_PATH = `${RESTOCK_PATH}/incoming`;
+
+// 금일 입고를 읽는다. 없거나 형식이 다르면 null (실물재고 = 전산재고).
+async function readRestockIncoming(): Promise<RestockIncoming | null> {
+  const snapshot = await get(child(dbRef, INCOMING_PATH));
+  const value: unknown = snapshot.val();
+  if (typeof value !== "object" || value === null) return null;
+  const incoming = value as Record<string, unknown>;
+  if (typeof incoming.재고일 !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(incoming.재고일))
+    return null;
+  if (typeof incoming.수량 !== "object" || incoming.수량 === null) return null;
+  return {
+    재고일: incoming.재고일,
+    uploadedAt: typeof incoming.uploadedAt === "string" ? incoming.uploadedAt : "",
+    수량: incoming.수량 as IncomingQuantities,
+  };
+}
+
+// 금일 입고를 지금 재고 날짜(/meta/productUploadedAt)에 적용하도록 저장하고, 저장한 값을 돌려준다.
+// expectedStockDate는 미리보기에 보여 준 재고 날짜다. 그 사이 재고 엑셀을 새로 올려 날짜가 바뀌었으면 막는다.
+async function saveRestockIncoming(
+  quantities: IncomingQuantities,
+  expectedStockDate: string
+): Promise<RestockIncoming> {
+  const stockDate = await readProductUploadedAt();
+  if (!stockDate) throw new Error("재고 기준일이 없습니다. 재고 엑셀을 먼저 올려 주세요.");
+  if (stockDate !== expectedStockDate)
+    throw new Error(`재고 날짜가 바뀌었습니다 (${expectedStockDate} → ${stockDate}). 다시 올려 주세요.`);
+  const 수량: IncomingQuantities = {};
+  for (const [code, colors] of Object.entries(quantities)) {
+    for (const [color, sizes] of Object.entries(colors)) {
+      for (const [size, quantity] of Object.entries(sizes)) {
+        if (typeof quantity !== "number" || !Number.isInteger(quantity) || quantity <= 0)
+          throw new Error(`잘못된 입고 수량입니다: ${code} ${color} ${size} ${String(quantity)}`);
+        const colorMap = (수량[toSafeKey(code)] ??= {});
+        const sizeMap = (colorMap[toSafeKey(color)] ??= {});
+        sizeMap[toSafeKey(size) as SizeKey] = quantity;
+      }
+    }
+  }
+  if (Object.keys(수량).length === 0) throw new Error("저장할 입고 수량이 없습니다.");
+  const incoming: RestockIncoming = { 재고일: stockDate, uploadedAt: toLocalDateString(), 수량 };
+  await set(ref(db, INCOMING_PATH), incoming);
+  return incoming;
 }
 
 // 챙길 목록 상태 바꾸기: 챙길 것으로 되돌림 / 챙김 / 못 챙김(사유)
@@ -353,24 +409,29 @@ function isRestockLine(value: unknown): boolean {
   );
 }
 
-// 항목의 칼라·사이즈 지금 재고와 재고 날짜를 DB에서 새로 읽는다.
+// 항목의 칼라·사이즈 지금 실물재고(전산재고 − 금일 입고)와 재고 날짜를 DB에서 새로 읽는다.
 // 재고 엑셀에 그 상품·칼라·사이즈가 없으면 재고 0으로 본다. 값의 형식이 다르면 막는다.
 // 재고 날짜가 없으면 입고 계산을 할 수 없으므로 막는다.
 async function readStockBaseline(
   item: Pick<RestockItem, "상품코드" | "칼라" | "사이즈">
 ): Promise<{ 기준재고: number; 기준일: string }> {
   const stockPath = `product/${toSafeKey(item.상품코드)}/재고/${toSafeKey(item.칼라)}/${toSafeKey(item.사이즈)}`;
-  const [stockSnapshot, 기준일] = await Promise.all([
+  const [stockSnapshot, 기준일, incoming] = await Promise.all([
     get(child(dbRef, stockPath)),
     readProductUploadedAt(),
+    readRestockIncoming(),
   ]);
   if (!기준일)
     throw new Error("재고 기준일이 없습니다. 재고 엑셀을 먼저 올려 주세요.");
-  const stock: unknown = stockSnapshot.val();
-  if (stock === null) return { 기준재고: 0, 기준일 };
-  if (typeof stock !== "number" || !Number.isFinite(stock))
-    throw new Error(`재고 값의 형식이 맞지 않습니다: ${String(stock)}`);
-  return { 기준재고: stock, 기준일 };
+  const raw: unknown = stockSnapshot.val();
+  if (raw !== null && (typeof raw !== "number" || !Number.isFinite(raw)))
+    throw new Error(`재고 값의 형식이 맞지 않습니다: ${String(raw)}`);
+  // 재고 엑셀에 그 칸이 없으면 전산재고 0
+  const systemStock = typeof raw === "number" ? raw : 0;
+  // 기준재고는 실물재고(전산재고 − 금일 입고)로 적는다 (spec.md "금일 입고 제외")
+  const 기준재고 =
+    getPhysicalStock(systemStock, incoming, 기준일, item.상품코드, item.칼라, item.사이즈) ?? 0;
+  return { 기준재고, 기준일 };
 }
 
 // 반품·교환 확인 목록의 "확인함"을 바꾼다 (없는 항목에 반쪽 항목이 생기지 않도록 트랜잭션)
@@ -418,6 +479,8 @@ export {
   readSalesDates,
   saveSalesUpload,
   readRestockLists,
+  readRestockIncoming,
+  saveRestockIncoming,
   changeRestockItemStatus,
   setRestockReturnChecked,
   setRestockPresaleRegistered,

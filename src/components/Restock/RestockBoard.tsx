@@ -11,6 +11,7 @@ import {
 import useProducts from "../../hooks/useProducts";
 import useProductUploadedAt from "../../hooks/useProductUploadedAt";
 import type { ProductType, RestockItem, RestockPresale, RestockReturn } from "../../types";
+import { getPhysicalStock, isIncomingActive } from "../../utils/physicalStock";
 import { computeArrival, type ArrivalResult } from "../../utils/restockArrival";
 import {
   groupByStatus,
@@ -63,6 +64,20 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     [lists.presales]
   );
   const [isPresaleOpen, setIsPresaleOpen] = useState(false);
+  // 금일입고제외 토글: 켜면 실물재고(전산재고 − 금일 입고), 끄면 전산재고를 보여 준다. 처음에는 켜짐.
+  // 보이는 숫자만 바꾸고, 입고 알림·기준재고 계산은 항상 실물재고로 한다.
+  const [showPhysical, setShowPhysical] = useState(true);
+  const incomingActive = isIncomingActive(lists.incoming, stockDate);
+
+  // 재고 엑셀에 상품이 없으면 null. 상품은 있는데 그 칼라·사이즈가 없으면 전산재고 0.
+  const getSystemStock = (item: ItemLine): number | null => {
+    const product = productMap.get(item.상품코드);
+    if (!product) return null;
+    return product.재고?.[item.칼라]?.[item.사이즈] ?? 0;
+  };
+  const toPhysical = (item: ItemLine, systemStock: number): number =>
+    getPhysicalStock(systemStock, lists.incoming, stockDate, item.상품코드, item.칼라, item.사이즈) ??
+    systemStock;
 
   // 입고 알림: 못 챙김 항목마다 입고 수를 다시 계산한다 (DB에는 쓰지 않는다).
   // 재고나 재고 날짜를 못 읽었으면 계산하지 않는다 (재고 0으로 잘못 계산하지 않도록).
@@ -72,10 +87,14 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     const map = new Map<string, ArrivalResult>();
     if (!canComputeArrival || !stockDate) return map;
     for (const { id, value: item } of itemGroups.notPacked) {
+      // 재고 엑셀에 그 상품·칼라·사이즈가 없으면 0 (기준재고를 적을 때와 같은 규칙)
+      const systemStock = productMap.get(item.상품코드)?.재고?.[item.칼라]?.[item.사이즈] ?? 0;
       const arrival = computeArrival({
         item,
-        // 재고 엑셀에 그 상품·칼라·사이즈가 없으면 0 (기준재고를 적을 때와 같은 규칙)
-        currentStock: productMap.get(item.상품코드)?.재고?.[item.칼라]?.[item.사이즈] ?? 0,
+        // 토글과 상관없이 항상 실물재고 (기준재고도 실물재고로 적으므로)
+        currentStock:
+          getPhysicalStock(systemStock, lists.incoming, stockDate, item.상품코드, item.칼라, item.사이즈) ??
+          systemStock,
         stockDate,
         sales: lists.sales,
         salesDates: lists.salesDates,
@@ -83,7 +102,15 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
       if (arrival) map.set(id, arrival);
     }
     return map;
-  }, [canComputeArrival, stockDate, itemGroups.notPacked, productMap, lists.sales, lists.salesDates]);
+  }, [
+    canComputeArrival,
+    stockDate,
+    itemGroups.notPacked,
+    productMap,
+    lists.sales,
+    lists.salesDates,
+    lists.incoming,
+  ]);
 
   // 입고 수가 1개 이상인 못 챙김 항목은 맨 위 알림으로 끌어올리고, 못 챙김 묶음에서는 뺀다
   const arrivedEntries = itemGroups.notPacked.filter(
@@ -101,10 +128,11 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     ...new Set([...arrivals.values()].flatMap((arrival) => arrival.빠진날)),
   ].sort();
 
+  // 화면에 보일 재고: 토글이 켜져 있고 금일 입고가 적용되면 실물재고, 아니면 전산재고
   const getCurrentStock = (item: ItemLine): number | null => {
-    const product = productMap.get(item.상품코드);
-    if (!product) return null;
-    return product.재고?.[item.칼라]?.[item.사이즈] ?? 0;
+    const systemStock = getSystemStock(item);
+    if (systemStock === null) return null;
+    return showPhysical ? toPhysical(item, systemStock) : systemStock;
   };
   const getProductName = (item: RestockItem | RestockReturn | RestockPresale): string =>
     item.상품명 || productMap.get(item.상품코드)?.상품명 || "-";
@@ -239,12 +267,27 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     <div className="mt-8 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold">챙길 목록</h2>
-        <PresaleToggleButton
-          count={presaleEntries.length}
-          isOpen={isPresaleOpen}
-          onClick={() => setIsPresaleOpen((open) => !open)}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          {incomingActive && (
+            <IncomingToggleButton
+              isOn={showPhysical}
+              onClick={() => setShowPhysical((on) => !on)}
+            />
+          )}
+          <PresaleToggleButton
+            count={presaleEntries.length}
+            isOpen={isPresaleOpen}
+            onClick={() => setIsPresaleOpen((open) => !open)}
+          />
+        </div>
       </div>
+      {incomingActive && (
+        <p className="mt-1 text-sm text-sky-700" data-testid="restock-stock-mode">
+          {showPhysical
+            ? "재고: 실물재고 (전산재고에서 금일 입고를 뺀 숫자)"
+            : "재고: 전산재고 (금일 입고 포함). 입고 알림·기준재고는 실물재고로 계산합니다."}
+        </p>
+      )}
       <PresaleList
         entries={presaleEntries}
         isOpen={isPresaleOpen}
@@ -325,6 +368,23 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
 };
 
 export default RestockBoard;
+
+// 금일입고제외 토글 버튼 (금일 입고가 지금 재고 날짜에 적용될 때만 보인다)
+const IncomingToggleButton = ({ isOn, onClick }: { isOn: boolean; onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={isOn}
+    data-testid="restock-incoming-toggle"
+    className={`shrink-0 cursor-pointer px-3 py-1.5 rounded-lg border text-sm font-medium ${
+      isOn
+        ? "bg-sky-600 border-sky-600 text-white"
+        : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+    }`}
+  >
+    금일입고제외
+  </button>
+);
 
 // 알림 문구용 항목 설명: "상품코드 칼라/사이즈"
 function describe(item: ItemLine): string {

@@ -148,3 +148,14 @@ export type SalesDateInfo = {
 
 // /restock/sales/{판매일자}/{상품코드}/{칼라}/{사이즈}: 순판매 수량 (반품을 뺀 값)
 export type DailySales = Record<string, Record<string, Partial<Record<SizeKey, number>>>>;
+
+// 금일 입고: 상품코드 → 칼라 → 사이즈 → 수량 (전표 상관없이 같은 칸은 더한 값)
+export type IncomingQuantities = Record<string, Record<string, Partial<Record<SizeKey, number>>>>;
+
+// /restock/incoming 금일 입고 (하루치 하나, 다시 올리면 통째로 덮어쓴다)
+// 재고일이 지금 재고 날짜(/meta/productUploadedAt)와 같을 때만 전산재고에서 뺀다
+export type RestockIncoming = {
+  재고일: string; // 올릴 때의 재고 날짜 "YYYY-MM-DD"
+  uploadedAt: string; // 올린 날짜 "YYYY-MM-DD"
+  수량: IncomingQuantities;
+};
