@@ -14,10 +14,14 @@ import type { ProductType, RestockItem, RestockPresale, RestockReturn } from "..
 import { getPhysicalStock, isIncomingActive } from "../../utils/physicalStock";
 import { computeArrival, type ArrivalResult } from "../../utils/restockArrival";
 import {
+  countBySalesDate,
+  filterBySalesDate,
+  getDefaultSalesDate,
   groupByStatus,
   restockReasonLabels,
   restockStatusGroups,
   sortRestockEntries,
+  type SalesDateSelection,
 } from "../../utils/restockView";
 import PresaleList, { PresaleToggleButton } from "./PresaleList";
 import RestockItemTable from "./RestockItemTable";
@@ -57,6 +61,19 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     () => groupByStatus(sortRestockEntries(lists.items)),
     [lists.items]
   );
+  // 판매일자별 보기: "챙길 것"·"챙김"만 고른 날짜로 좁힌다 (입고 알림·못 챙김·반품·선판매는 항상 모두).
+  // 처음과 판매일자 목록이 바뀐 뒤(새로 올림)에는 가장 최근 판매일자. 고른 값은 저장하지 않는다.
+  const salesDatesKey = Object.keys(lists.salesDates).sort().join(",");
+  const [pickedDate, setPickedDate] = useState<{
+    selection: SalesDateSelection;
+    salesDatesKey: string;
+  } | null>(null);
+  const dateSelection =
+    pickedDate && pickedDate.salesDatesKey === salesDatesKey
+      ? pickedDate.selection
+      : getDefaultSalesDate(lists.salesDates);
+  const pendingCounts = useMemo(() => countBySalesDate(itemGroups.pending), [itemGroups.pending]);
+
   const returnEntries = useMemo(() => sortRestockEntries(lists.returns), [lists.returns]);
   // 선판매 목록: 등록 완료하지 않은 항목만 보여 준다
   const presaleEntries = useMemo(
@@ -337,7 +354,12 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
         />
       )}
 
-      <SalesDateList salesDates={lists.salesDates} />
+      <SalesDateList
+        salesDates={lists.salesDates}
+        selection={dateSelection}
+        onSelect={(selection) => setPickedDate({ selection, salesDatesKey })}
+        pendingCounts={pendingCounts}
+      />
 
       <ReturnCheckList
         entries={returnEntries}
@@ -350,11 +372,15 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
         <RestockItemTable
           key={status}
           status={status}
-          label={label}
+          label={
+            status === "notPacked" || dateSelection === "all"
+              ? label
+              : `${label} · ${dateSelection.slice(5)}`
+          }
           entries={
             status === "notPacked"
               ? itemGroups.notPacked.filter(({ id }) => !arrivedIds.has(id))
-              : itemGroups[status]
+              : filterBySalesDate(itemGroups[status], dateSelection)
           }
           getCurrentStock={getCurrentStock}
           getProductName={getProductName}

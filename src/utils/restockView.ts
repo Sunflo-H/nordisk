@@ -81,3 +81,33 @@ function toUtcTime(date: string): number {
   const [year, month, day] = date.split("-").map(Number);
   return Date.UTC(year, month - 1, day);
 }
+
+// 판매일자별 보기 (spec.md "판매일자별 보기")
+// 고른 판매일자. "all"이면 전체.
+export type SalesDateSelection = string | "all";
+
+// 처음 고를 판매일자: 올린 판매일자 중 가장 최근. 없으면 전체.
+export function getDefaultSalesDate(salesDates: Record<string, unknown>): SalesDateSelection {
+  const dates = Object.keys(salesDates).filter(isDateString).sort();
+  return dates.length > 0 ? dates[dates.length - 1] : "all";
+}
+
+// 고른 판매일자의 항목만 남긴다 ("챙길 것"·"챙김" 묶음에만 쓴다)
+export function filterBySalesDate<T extends Pick<RestockItem, "판매일자">>(
+  entries: RestockEntry<T>[],
+  selection: SalesDateSelection
+): RestockEntry<T>[] {
+  if (selection === "all") return entries;
+  return entries.filter(({ value }) => value.판매일자 === selection);
+}
+
+// 판매일자별 항목 수 ("챙길 것" 묶음을 넘겨 날짜 버튼의 남은 수로 쓴다)
+export function countBySalesDate(
+  entries: RestockEntry<Pick<RestockItem, "판매일자">>[]
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const { value } of entries) {
+    counts.set(value.판매일자, (counts.get(value.판매일자) ?? 0) + 1);
+  }
+  return counts;
+}
