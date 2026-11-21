@@ -3,11 +3,13 @@ import { Link } from "react-router";
 import EventProductPicker from "../components/EventEditor/EventProductPicker";
 import PageHeader from "../components/PageHeader/PageHeader";
 import ProductListView from "../components/ProductList/ProductListView";
+import SearchFilterPanel from "../components/ProductList/SearchFilterPanel";
 import {
   clearEventProductCodes,
   removeEventProductCode,
 } from "../firebase/firebaseDatabase";
 import useEventProducts from "../hooks/useEventProducts";
+import useProductSearchFilter from "../hooks/useProductSearchFilter";
 import type { ProductType } from "../types";
 
 // 행사장 재고 관리 페이지: 행사장에 보낸 상품의 재고만 보여 준다.
@@ -21,6 +23,8 @@ const EventInventory = () => {
     errorMessage,
     reload,
   } = useEventProducts();
+  // 행사장 상품 목록의 검색·필터 상태 (영역은 상품 선택 열기 바로 아래)
+  const search = useProductSearchFilter(eventProducts);
   // 빼기·전체 비우기 처리 중에는 버튼을 막아 중복 요청을 막는다
   const [isRemoving, setIsRemoving] = useState(false);
   // 상품 선택 영역 열림 여부. 닫아도 컴포넌트는 남겨 두어 저장 전 체크 상태가 유지된다.
@@ -106,6 +110,12 @@ const EventInventory = () => {
           </div>
         </div>
       )}
+      {/* 검색·필터: 상품 선택 열기 바로 아래, 같은 폭 (PC·폰 모두).
+          상품 선택 영역은 PC 전용이라 폰에서는 이것이 맨 위가 된다. */}
+      <SearchFilterPanel
+        search={search}
+        className={isLoaded && !errorMessage ? "sm:mt-0 mt-6" : "mt-6"}
+      />
       <div className="max-w-[320px] m-auto mt-6">
         {!isLoaded && (
           <p className="text-center text-gray-500">불러오는 중...</p>
@@ -133,7 +143,7 @@ const EventInventory = () => {
         )}
         {eventProducts.length > 0 && (
           <ProductListView
-            products={eventProducts}
+            search={search}
             renderCardAction={renderRemoveButton}
             eventCategories={eventCategories}
           />

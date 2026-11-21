@@ -1,62 +1,31 @@
-import { useMemo, useState, type ReactNode } from "react";
-import type {
-  EventCategoryMap,
-  FilterOptionsType,
-  ProductType,
-} from "../../types";
-import Filter from "../Filter/Filter";
+import type { ReactNode } from "react";
+import type { ProductSearchFilter } from "../../hooks/useProductSearchFilter";
+import type { EventCategoryMap, ProductType } from "../../types";
 import ProductCard from "../ProductCard/ProductCard";
-import {
-  countProductsByOption,
-  countSelectedOptions,
-  emptyFilterOptions,
-  getFilteredData,
-} from "../../utils/productFilter";
 import { getStockLocation } from "../../utils/stockLocation";
 
 type ProductListViewProps = {
-  products: ProductType[];
+  // 페이지의 검색·필터 상태 (검색·필터 영역은 페이지 위쪽에 따로 둔다)
+  search: ProductSearchFilter;
   // 상품 카드마다 붙일 추가 버튼 등 (선택). /inventory에서는 넘기지 않는다.
   renderCardAction?: (product: ProductType) => ReactNode;
   // 행사장 분류 (선택). 넘기면 카드마다 "행사장만 / 매장만 / 둘 다" 배지를 붙인다.
   eventCategories?: EventCategoryMap;
 };
 
-// 상품 배열을 받아 필터 + 상품 카드 목록을 보여주는 공용 컴포넌트
-// (/inventory, /event 페이지에서 함께 사용)
+// 검색·필터를 건 상품 카드 목록 (/inventory, /event 공용)
+// 걸려 있으면 목록 위에 "필터 적용 중" 줄을 보여 준다.
 const ProductListView: React.FC<ProductListViewProps> = ({
-  products,
+  search,
   renderCardAction,
   eventCategories,
 }) => {
-  // 실제로 적용된 필터 값 (패널에서 "적용"을 눌렀을 때만 바뀐다)
-  const [filterOptions, setFilterOptions] =
-    useState<FilterOptionsType>(emptyFilterOptions);
-
-  const filteredProducts = useMemo(
-    () => getFilteredData(products, filterOptions),
-    [products, filterOptions]
-  );
-
-  // 칩 옆에 보여 줄 값별 상품 수 (이 페이지 상품 기준, 고정 개수)
-  const optionCounts = useMemo(
-    () => ({
-      year: countProductsByOption(products, "year"),
-      gender: countProductsByOption(products, "gender"),
-      category: countProductsByOption(products, "category"),
-    }),
-    [products]
-  );
-
-  const selectedCount = countSelectedOptions(filterOptions);
-  const isFiltering = selectedCount > 0;
-
-  const clearFilter = () => setFilterOptions(emptyFilterOptions);
+  const { filteredProducts, isFiltering, clearFilter } = search;
 
   return (
     <>
       {isFiltering && (
-        // 필터 적용 상태 줄: 지금 목록이 걸러진 것인지 알려 준다.
+        // 필터 적용 상태 줄: 검색·필터 영역을 닫아도 지금 목록이 걸러진 것인지 알려 준다.
         <div
           data-testid="filter-status"
           className="flex items-center justify-between mb-2 px-3 py-2 text-sm bg-blue-50 border border-blue-200 rounded-lg"
@@ -102,11 +71,6 @@ const ProductListView: React.FC<ProductListViewProps> = ({
           )
         )}
       </main>
-      <Filter
-        appliedOptions={filterOptions}
-        onApply={setFilterOptions}
-        optionCounts={optionCounts}
-      />
     </>
   );
 };

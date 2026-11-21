@@ -9,14 +9,14 @@ import type {
 import {
   categoryOptions,
   genderOptions,
-  getFilteredData,
+  getSearchedFilteredData,
   yearOptions,
 } from "../../utils/productFilter";
 import {
   selectableEventCategories,
   stockLocationLabels,
 } from "../../utils/stockLocation";
-import PickerChipGroup from "./PickerChipGroup";
+import FilterChipGroup from "../Filter/FilterChipGroup";
 
 type EventProductPickerProps = {
   // 검색·선택 대상이 되는 전체 상품
@@ -53,16 +53,8 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
 
   // 검색어 · 칩 필터 · 선택한 것만 보기를 모두 AND로 건다
   const visibleProducts = useMemo(() => {
-    const query = keyword.trim().toLowerCase();
-    // 상품코드·상품명 검색 (대소문자 구분 없음)
-    const searched = query
-      ? allProducts.filter(
-          (product) =>
-            product.상품코드.toLowerCase().includes(query) ||
-            (product.상품명 ?? "").toLowerCase().includes(query)
-        )
-      : allProducts;
-    const filtered = getFilteredData(searched, filterOptions);
+    // 상품코드·상품명 검색(대소문자 구분 없음) + 칩 필터
+    const filtered = getSearchedFilteredData(allProducts, keyword, filterOptions);
     return showSelectedOnly
       ? filtered.filter((product) => selectedCategories.has(product.상품코드))
       : filtered;
@@ -146,19 +138,19 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
       />
 
       <div className="flex flex-col gap-2 mb-3">
-        <PickerChipGroup
+        <FilterChipGroup
           title="연도"
           options={yearOptions}
           selectedOptions={filterOptions.year}
           onToggle={(option) => toggleFilterOption("year", option)}
         />
-        <PickerChipGroup
+        <FilterChipGroup
           title="성별"
           options={genderOptions}
           selectedOptions={filterOptions.gender}
           onToggle={(option) => toggleFilterOption("gender", option)}
         />
-        <PickerChipGroup
+        <FilterChipGroup
           title="카테고리"
           options={categoryOptions}
           selectedOptions={filterOptions.category}
