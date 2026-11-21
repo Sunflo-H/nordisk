@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import EventProductPicker from "../components/EventEditor/EventProductPicker";
 import PageHeader from "../components/PageHeader/PageHeader";
 import ProductListView from "../components/ProductList/ProductListView";
+import ProductPageLayout from "../components/ProductList/ProductPageLayout";
 import SearchFilterPanel from "../components/ProductList/SearchFilterPanel";
 import {
   clearEventProductCodes,
@@ -85,80 +86,82 @@ const EventInventory = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <PageHeader title="행사장 재고 관리" />
-      {/* 상품 선택 영역 (PC 전용). 행사장 목록을 제대로 읽은 뒤에만 보여 줘야
-          읽기 실패 시 빈 목록으로 덮어쓰는 일이 없다. */}
-      {isLoaded && !errorMessage && (
-        <div className="hidden sm:block max-w-[600px] m-auto mt-6 px-4">
-          <button
-            type="button"
-            onClick={() => setIsPickerOpen((prev) => !prev)}
-            aria-expanded={isPickerOpen}
-            className="w-full mb-2 px-4 py-2 text-sm font-semibold text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            {isPickerOpen ? "상품 선택 닫기 ▲" : "상품 선택 열기 ▼"}
-          </button>
-          <div className={isPickerOpen ? "" : "hidden"}>
-            <EventProductPicker
-              key={Object.entries(eventCategories)
-                .map(([code, category]) => `${code}:${category}`)
-                .sort()
-                .join(",")}
-              allProducts={allProducts}
-              eventCategories={eventCategories}
-              onSaved={reload}
-            />
-          </div>
-        </div>
-      )}
-      {/* 검색·필터: 상품 선택 열기 바로 아래, 같은 폭 (PC·폰 모두).
-          상품 선택 영역은 PC 전용이라 폰에서는 이것이 맨 위가 된다. */}
-      <SearchFilterPanel
-        search={search}
-        className={isLoaded && !errorMessage ? "sm:mt-0 mt-6" : "mt-6"}
-      />
-      <div className="max-w-[320px] sm:max-w-[600px] sm:px-4 m-auto mt-6">
-        {!isLoaded && (
-          <p className="text-center text-gray-500">불러오는 중...</p>
-        )}
-        {errorMessage && (
-          <p className="text-center text-red-500">{errorMessage}</p>
-        )}
-        {isEmpty && (
-          <p className="text-center text-gray-500">
-            행사장에 등록된 상품이 없습니다
-          </p>
-        )}
-        {isLoaded && !errorMessage && eventProductCodes.length > 0 && (
-          // 전체 비우기 (PC 전용). /product에 없는 상품코드까지 함께 지운다.
-          <div className="hidden sm:flex justify-end mb-2">
+      {/* 1024px 이상은 왼쪽 사이드바에 검색·필터 (상품 선택 영역·목록은 가운데 열) */}
+      <ProductPageLayout search={search}>
+        {/* 상품 선택 영역 (PC 전용). 행사장 목록을 제대로 읽은 뒤에만 보여 줘야
+            읽기 실패 시 빈 목록으로 덮어쓰는 일이 없다. */}
+        {isLoaded && !errorMessage && (
+          <div className="hidden sm:block max-w-[600px] m-auto mt-6 px-4">
             <button
               type="button"
-              onClick={handleClearAll}
-              disabled={isRemoving}
-              className="px-3 py-1 text-sm text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              onClick={() => setIsPickerOpen((prev) => !prev)}
+              aria-expanded={isPickerOpen}
+              className="w-full mb-2 px-4 py-2 text-sm font-semibold text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
             >
-              전체 비우기
+              {isPickerOpen ? "상품 선택 닫기 ▲" : "상품 선택 열기 ▼"}
             </button>
+            <div className={isPickerOpen ? "" : "hidden"}>
+              <EventProductPicker
+                key={Object.entries(eventCategories)
+                  .map(([code, category]) => `${code}:${category}`)
+                  .sort()
+                  .join(",")}
+                allProducts={allProducts}
+                eventCategories={eventCategories}
+                onSaved={reload}
+              />
+            </div>
           </div>
         )}
-        {eventProducts.length > 0 && (
-          <ProductListView
-            search={search}
-            renderCardAction={renderRemoveButton}
-            eventCategories={eventCategories}
-          />
-        )}
-        {/* 지운 상품 페이지 링크 (PC 전용). 항상 볼 것이 아니라 맨 아래에 둔다.
-            목록이 비어도(전체 비우기 뒤) 보인다. */}
-        <div className="hidden sm:block mt-8 mb-10 text-center">
-          <Link
-            to="/event/deleted"
-            className="text-sm text-gray-500 underline hover:text-gray-700"
-          >
-            지운 상품 보기
-          </Link>
+        {/* 검색·필터 펼침 영역 (640~1023px): 상품 선택 열기 바로 아래, 같은 폭 */}
+        <SearchFilterPanel
+          search={search}
+          className={isLoaded && !errorMessage ? "sm:mt-0 mt-6" : "mt-6"}
+        />
+        <div className="max-w-[320px] sm:max-w-[600px] sm:px-4 m-auto mt-6">
+          {!isLoaded && (
+            <p className="text-center text-gray-500">불러오는 중...</p>
+          )}
+          {errorMessage && (
+            <p className="text-center text-red-500">{errorMessage}</p>
+          )}
+          {isEmpty && (
+            <p className="text-center text-gray-500">
+              행사장에 등록된 상품이 없습니다
+            </p>
+          )}
+          {isLoaded && !errorMessage && eventProductCodes.length > 0 && (
+            // 전체 비우기 (PC 전용). /product에 없는 상품코드까지 함께 지운다.
+            <div className="hidden sm:flex justify-end mb-2">
+              <button
+                type="button"
+                onClick={handleClearAll}
+                disabled={isRemoving}
+                className="px-3 py-1 text-sm text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                전체 비우기
+              </button>
+            </div>
+          )}
+          {eventProducts.length > 0 && (
+            <ProductListView
+              search={search}
+              renderCardAction={renderRemoveButton}
+              eventCategories={eventCategories}
+            />
+          )}
+          {/* 지운 상품 페이지 링크 (PC 전용). 항상 볼 것이 아니라 맨 아래에 둔다.
+              목록이 비어도(전체 비우기 뒤) 보인다. */}
+          <div className="hidden sm:block mt-8 mb-10 text-center">
+            <Link
+              to="/event/deleted"
+              className="text-sm text-gray-500 underline hover:text-gray-700"
+            >
+              지운 상품 보기
+            </Link>
+          </div>
         </div>
-      </div>
+      </ProductPageLayout>
     </div>
   );
 };
