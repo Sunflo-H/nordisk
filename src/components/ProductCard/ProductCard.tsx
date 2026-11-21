@@ -17,7 +17,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   action,
   stockLocation,
 }) => {
-  const { 상품코드, 칼라, 판매가 } = product;
+  const { 상품코드, 상품명, 칼라, 판매가 } = product;
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const openModal: () => void = () => setIsOpen(true);
@@ -33,8 +33,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
         text-sm sm:text-base font-semibold cursor-pointer"
         onClick={openModal}
       >
-        <div>
-          <div className="text-start text-xl mb-1">{상품코드}</div>
+        {/* 왼쪽이 남는 폭을 채워 가격이 카드마다 같은 자리(오른쪽)에 오게 한다 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 min-w-0 mb-1 text-start">
+            <span className="text-xl shrink-0">{상품코드}</span>
+            {/* 상품명은 PC에서만 (spec.md "PC·모바일 나누기"). 길면 말줄임 */}
+            {상품명 && (
+              <span
+                data-testid="product-name"
+                className="hidden sm:inline truncate text-sm font-normal text-gray-600"
+              >
+                {상품명}
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-1 text-start">
             {/* 재고 위치 배지는 색상 칩 앞에 둔다 (상품코드 줄에 두면 "빼기" 버튼이 있는 카드가 좁아진다) */}
             {stockLocation && <StockLocationBadge location={stockLocation} />}

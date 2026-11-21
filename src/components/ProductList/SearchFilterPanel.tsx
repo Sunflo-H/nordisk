@@ -13,7 +13,7 @@ type SearchFilterPanelProps = {
   className?: string;
 };
 
-// 상품 목록의 검색·필터 영역. 행사장 "상품 선택 열기"와 같은 폭·모양의 토글로 펼친다.
+// 상품 목록의 검색·필터 영역 (PC 전용, 모바일은 MobileFilter). 행사장 "상품 선택 열기"와 같은 폭·모양의 토글로 펼친다.
 // 닫아도 검색어·칩은 그대로 걸려 있다 (목록 위 "필터 적용 중" 줄로 알린다).
 const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
   search,
@@ -32,7 +32,7 @@ const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
   } = search;
 
   return (
-    <div className={`max-w-[600px] m-auto px-4 ${className}`}>
+    <div className={`hidden sm:block max-w-[600px] m-auto px-4 ${className}`}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}

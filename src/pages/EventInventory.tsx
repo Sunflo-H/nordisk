@@ -116,7 +116,7 @@ const EventInventory = () => {
         search={search}
         className={isLoaded && !errorMessage ? "sm:mt-0 mt-6" : "mt-6"}
       />
-      <div className="max-w-[320px] m-auto mt-6">
+      <div className="max-w-[320px] sm:max-w-[600px] sm:px-4 m-auto mt-6">
         {!isLoaded && (
           <p className="text-center text-gray-500">불러오는 중...</p>
         )}

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { ProductSearchFilter } from "../../hooks/useProductSearchFilter";
 import type { EventCategoryMap, ProductType } from "../../types";
+import MobileFilter from "../Filter/MobileFilter";
 import ProductCard from "../ProductCard/ProductCard";
 import { getStockLocation } from "../../utils/stockLocation";
 
@@ -71,6 +72,8 @@ const ProductListView: React.FC<ProductListViewProps> = ({
           )
         )}
       </main>
+      {/* 모바일 전용 필터 버튼·패널 (PC는 페이지 위쪽 검색·필터) */}
+      <MobileFilter search={search} />
     </>
   );
 };
