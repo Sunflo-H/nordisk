@@ -31,6 +31,13 @@ const Home = () => {
           >
             행사장 판매분 챙기기
           </Link>
+          {/* 지운 행사장 상품: 재고 확인 체크를 폰에서도 쓰므로 모든 화면에서 보인다 */}
+          <Link
+            to="/event/deleted"
+            className="block w-full py-3 bg-white text-emerald-600! text-center font-semibold rounded-xl shadow-md border border-emerald-500 hover:bg-emerald-50 transition-colors"
+          >
+            지운 행사장 상품
+          </Link>
         </nav>
 
         <ExcelManager />

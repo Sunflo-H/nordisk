@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import EventProductPicker from "../components/EventEditor/EventProductPicker";
 import PageHeader from "../components/PageHeader/PageHeader";
 import ProductListView from "../components/ProductList/ProductListView";
@@ -137,6 +138,16 @@ const EventInventory = () => {
             eventCategories={eventCategories}
           />
         )}
+        {/* 지운 상품 페이지 링크 (PC 전용). 항상 볼 것이 아니라 맨 아래에 둔다.
+            목록이 비어도(전체 비우기 뒤) 보인다. */}
+        <div className="hidden sm:block mt-8 mb-10 text-center">
+          <Link
+            to="/event/deleted"
+            className="text-sm text-gray-500 underline hover:text-gray-700"
+          >
+            지운 상품 보기
+          </Link>
+        </div>
       </div>
     </div>
   );

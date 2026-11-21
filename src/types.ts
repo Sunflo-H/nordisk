@@ -77,6 +77,20 @@ export type EventCategory = "event_only" | "both" | "unclassified";
 // 상품코드 → 행사장 분류
 export type EventCategoryMap = Record<string, EventCategory>;
 
+// 행사장 상품 삭제 방법: 빼기 / 전체 비우기
+export type EventDeletionMethod = "remove" | "clear";
+
+// /event/deletionLog/{id} 한 건. 상품은 지운 상품코드 → 지우기 전 분류
+export type EventDeletionLogEntry = {
+  id: string;
+  삭제일시: string;
+  방법: EventDeletionMethod;
+  상품: EventCategoryMap;
+};
+
+// /event/deletionChecks: 지운 상품 중 재고를 확인한 상품코드 → 확인일시
+export type EventDeletionChecks = Record<string, string>;
+
 // 상품 카드에 보여 줄 재고 위치 (행사장 목록에 없으면 store_only)
 export type StockLocation = EventCategory | "store_only";
 

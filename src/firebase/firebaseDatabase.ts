@@ -2,6 +2,7 @@ import {
   child,
   get,
   getDatabase,
+  push,
   ref,
   runTransaction,
   set,
@@ -9,12 +10,16 @@ import {
 } from "firebase/database";
 import type { Dispatch, SetStateAction } from "react";
 import type { SalesUploadPlan } from "../utils/restockPlan";
-import { toLocalDateString } from "../utils/date";
+import { toLocalDateString, toLocalDateTimeString } from "../utils/date";
+import { parseEventDeletionLog } from "../utils/eventDeletionLog";
 import { getPhysicalStock } from "../utils/physicalStock";
 import type {
   DailySales,
   EventCategory,
   EventCategoryMap,
+  EventDeletionChecks,
+  EventDeletionLogEntry,
+  EventDeletionMethod,
   IncomingQuantities,
   ProductType,
   RestockIncoming,
@@ -178,16 +183,99 @@ async function saveEventCategories(categories: EventCategoryMap): Promise<void> 
   await set(ref(db, EVENT_PRODUCTS_PATH), value);
 }
 
+// 삭제 기록 경로. 구조는 spec.md "삭제 기록"
+const EVENT_DELETION_LOG_PATH = "event/deletionLog";
+
+// 행사장 상품을 지우면서 삭제 기록을 함께 남긴다. 둘을 update 한 번으로 묶어 전부 성공하거나 전부 실패한다.
+// deletedProducts: 지울 상품코드 → 지우기 전 DB 값. 비어 있으면 아무것도 쓰지 않는다.
+async function deleteEventProductsWithLog(
+  deletedProducts: Record<string, unknown>,
+  method: EventDeletionMethod,
+  removalUpdates: Record<string, null>
+): Promise<void> {
+  if (Object.keys(deletedProducts).length === 0) return;
+  // push는 키만 만들고 아직 쓰지 않는다 (실제 쓰기는 아래 update 한 번)
+  const logKey = push(ref(db, EVENT_DELETION_LOG_PATH)).key;
+  if (!logKey) throw new Error("삭제 기록 키를 만들지 못했습니다.");
+  await update(ref(db), {
+    ...removalUpdates,
+    [`${EVENT_DELETION_LOG_PATH}/${logKey}`]: {
+      삭제일시: toLocalDateTimeString(),
+      방법: method,
+      상품: deletedProducts,
+    },
+  });
+}
+
 // 행사장 목록에서 상품 하나를 뺀다. 원본 /product는 건드리지 않는다.
+// 지우기 직전 DB 값을 다시 읽어 기록에 적는다. 이미 없으면 아무것도 쓰지 않는다.
 async function removeEventProductCode(productCode: string): Promise<void> {
   const code = toSafeProductCode(productCode);
   if (!code) throw new Error("상품코드가 비어 있거나 잘못되었습니다.");
-  await set(ref(db, `${EVENT_PRODUCTS_PATH}/${code}`), null);
+  const path = `${EVENT_PRODUCTS_PATH}/${code}`;
+  const snapshot = await get(child(dbRef, path));
+  if (!snapshot.exists()) return;
+  await deleteEventProductsWithLog({ [code]: snapshot.val() }, "remove", {
+    [path]: null,
+  });
 }
 
 // 행사장 목록을 전부 비운다. 원본 /product는 건드리지 않는다.
-function clearEventProductCodes(): Promise<void> {
-  return set(ref(db, EVENT_PRODUCTS_PATH), null);
+// 지우기 직전 DB의 목록을 다시 읽어 통째로 기록에 적는다. 이미 비어 있으면 아무것도 쓰지 않는다.
+async function clearEventProductCodes(): Promise<void> {
+  const snapshot = await get(child(dbRef, EVENT_PRODUCTS_PATH));
+  if (!snapshot.exists()) return;
+  const value: unknown = snapshot.val();
+  // 객체가 아니면(예상 밖 형식) 기록 없이 지우거나 "비웠다"고 잘못 알리지 않도록 막는다
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    throw new Error("행사장 목록 형식이 예상과 다릅니다.");
+  await deleteEventProductsWithLog(
+    value as Record<string, unknown>,
+    "clear",
+    { [EVENT_PRODUCTS_PATH]: null }
+  );
+}
+
+// 지운 상품 재고 확인 체크 경로. 구조는 spec.md "삭제 기록"
+const EVENT_DELETION_CHECKS_PATH = "event/deletionChecks";
+
+// 재고를 확인한 상품코드 → 확인일시를 읽는다. 형식이 다른 값은 건너뛴다.
+async function readEventDeletionChecks(): Promise<EventDeletionChecks> {
+  const snapshot = await get(child(dbRef, EVENT_DELETION_CHECKS_PATH));
+  const value: unknown = snapshot.val();
+  const checks: EventDeletionChecks = {};
+  if (typeof value !== "object" || value === null) return checks;
+  for (const [code, raw] of Object.entries(value)) {
+    if (typeof raw !== "object" || raw === null) continue;
+    const checkedAt: unknown = (raw as Record<string, unknown>).확인일시;
+    if (typeof checkedAt === "string") checks[code] = checkedAt;
+  }
+  return checks;
+}
+
+// 상품 하나의 재고 확인 체크를 켜거나 끈다. 켜면 확인일시를 적고, 끄면 그 상품의 체크만 지운다.
+// 켰을 때 적은 확인일시를 돌려준다 (끄면 null).
+async function setEventDeletionCheck(
+  productCode: string,
+  checked: boolean
+): Promise<string | null> {
+  const code = toSafeProductCode(productCode);
+  // 빈 상품코드가 경로에 들어가면 체크 전체를 가리키므로 반드시 막는다
+  if (!code) throw new Error("상품코드가 비어 있거나 잘못되었습니다.");
+  const path = `${EVENT_DELETION_CHECKS_PATH}/${code}`;
+  if (!checked) {
+    await set(ref(db, path), null);
+    return null;
+  }
+  const checkedAt = toLocalDateTimeString();
+  await set(ref(db, path), { 확인일시: checkedAt });
+  return checkedAt;
+}
+
+// 행사장 상품 삭제 기록을 읽는다. 최근 기록이 앞에 온다. 실패하면 Promise가 거부된다.
+async function readEventDeletionLog(): Promise<EventDeletionLogEntry[]> {
+  const snapshot = await get(child(dbRef, EVENT_DELETION_LOG_PATH));
+  return parseEventDeletionLog(snapshot.val());
 }
 
 // ===== 행사장 보충(/restock) 관련 함수 =====
@@ -495,4 +583,7 @@ export {
   saveEventCategories,
   removeEventProductCode,
   clearEventProductCodes,
+  readEventDeletionLog,
+  readEventDeletionChecks,
+  setEventDeletionCheck,
 };

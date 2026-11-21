@@ -6,3 +6,17 @@ export function toLocalDateString(date: Date = new Date()): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+// 날짜·시각을 현지 시간대를 붙인 ISO 형식으로 바꾼다. 예: "2026-11-21T14:03:12+09:00"
+export function toLocalDateTimeString(date: Date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  // getTimezoneOffset은 UTC − 현지 시각(분)이라 한국은 -540
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? "+" : "-";
+  const offsetHours = pad(Math.floor(Math.abs(offset) / 60));
+  const offsetMinutes = pad(Math.abs(offset) % 60);
+  return (
+    `${toLocalDateString(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}` +
+    `${sign}${offsetHours}:${offsetMinutes}`
+  );
+}
