@@ -108,10 +108,12 @@ export type SalesLine = {
   isStoreSale: boolean; // 고객명이 매장 판매 표시 이름이면 true
 };
 
-// 챙길 목록 상태: 챙길 것 / 챙김 / 못 챙김
-export type RestockStatus = "pending" | "packed" | "notPacked";
+// 챙길 목록 상태: 챙길 것 / 챙김 / 못 챙김 / 매장판매
+// 매장판매: 챙길 목록에 올라왔지만 실제로는 매장에서 판 줄. 챙김처럼 끝난 항목이다 (2026-11-23)
+export type RestockStatus = "pending" | "packed" | "notPacked" | "storeSale";
 
-// 못 챙김 사유: 매장 보관 / 품절
+// 못 챙김 사유: 품절. "keepInStore"(예전 "매장 보관")는 예전 기록에만 있고,
+// 읽을 때 매장판매(storeSale)로 바꿔 읽는다 (normalizeRestockItem)
 export type RestockReason = "keepInStore" | "soldOut";
 
 // /restock/items/{id}

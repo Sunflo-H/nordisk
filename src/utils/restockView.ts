@@ -4,17 +4,32 @@ import type { RestockItem, RestockReason, RestockStatus } from "../types";
 
 export type RestockEntry<T> = { id: string; value: T };
 
+// 화면의 상태 묶음: 매장판매(storeSale)는 따로 묶지 않고 "챙김" 묶음에 함께 둔다
+export type RestockGroupKey = Exclude<RestockStatus, "storeSale">;
+
 // 상태 묶음 순서와 제목
-export const restockStatusGroups: { status: RestockStatus; label: string }[] = [
+export const restockStatusGroups: { status: RestockGroupKey; label: string }[] = [
   { status: "pending", label: "챙길 것" },
   { status: "notPacked", label: "못 챙김" },
   { status: "packed", label: "챙김" },
 ];
 
 export const restockReasonLabels: Record<RestockReason, string> = {
-  keepInStore: "매장 보관",
+  keepInStore: "매장판매", // 예전 기록에만 있는 값 (읽을 때 매장판매로 바꿔 읽는다)
   soldOut: "품절",
 };
+
+// DB에서 읽은 항목을 화면·계산에 쓸 모양으로 바꾼다.
+// 예전 "매장 보관"(못 챙김 + keepInStore)은 매장판매로 바꿔 읽는다 (spec.md "매장판매").
+// DB 값은 고쳐 쓰지 않으며, 남아 있는 사유·기준재고·기준일은 버린다.
+export function normalizeRestockItem(item: RestockItem): RestockItem {
+  if (item.상태 !== "notPacked" || item.사유 !== "keepInStore") return item;
+  const next: RestockItem = { ...item, 상태: "storeSale" };
+  delete next.사유;
+  delete next.기준재고;
+  delete next.기준일;
+  return next;
+}
 
 type SortableLine = Pick<RestockItem, "판매일자" | "상품코드" | "칼라" | "사이즈">;
 
@@ -34,18 +49,25 @@ export function sortRestockEntries<T extends SortableLine>(
     );
 }
 
-// 상태별로 나눈다. 알 수 없는 상태 값은 "챙길 것"으로 본다 (목록에서 사라지지 않도록).
+// 상태별로 나눈다. 매장판매는 "챙김" 묶음에 넣는다.
+// 알 수 없는 상태 값은 "챙길 것"으로 본다 (목록에서 사라지지 않도록).
 export function groupByStatus(
   entries: RestockEntry<RestockItem>[]
-): Record<RestockStatus, RestockEntry<RestockItem>[]> {
-  const groups: Record<RestockStatus, RestockEntry<RestockItem>[]> = {
+): Record<RestockGroupKey, RestockEntry<RestockItem>[]> {
+  const groups: Record<RestockGroupKey, RestockEntry<RestockItem>[]> = {
     pending: [],
     notPacked: [],
     packed: [],
   };
   for (const entry of entries) {
-    const status = entry.value.상태 in groups ? entry.value.상태 : "pending";
-    groups[status].push(entry);
+    const status: string = entry.value.상태;
+    const group: RestockGroupKey =
+      status === "storeSale"
+        ? "packed"
+        : status === "notPacked" || status === "packed"
+          ? status
+          : "pending";
+    groups[group].push(entry);
   }
   return groups;
 }

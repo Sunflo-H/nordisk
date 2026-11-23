@@ -1,11 +1,15 @@
 import type { RestockStatusChange } from "../../firebase/firebaseDatabase";
-import type { RestockItem, RestockStatus } from "../../types";
+import type { RestockItem } from "../../types";
 import type { ArrivalResult } from "../../utils/restockArrival";
-import { restockReasonLabels, type RestockEntry } from "../../utils/restockView";
+import {
+  restockReasonLabels,
+  type RestockEntry,
+  type RestockGroupKey,
+} from "../../utils/restockView";
 import ArrivalNote from "./ArrivalNote";
 
 type RestockItemTableProps = {
-  status: RestockStatus;
+  status: RestockGroupKey;
   label: string;
   entries: RestockEntry<RestockItem>[];
   // 항목의 지금 재고 (재고 엑셀에 상품이 없으면 null)
@@ -22,7 +26,7 @@ type RestockItemTableProps = {
   testId?: string;
 };
 
-// 상태 묶음 하나(챙길 것 / 못 챙김 / 챙김)의 표
+// 상태 묶음 하나(챙길 것 / 못 챙김 / 챙김)의 표. 매장판매 항목은 챙김 묶음에 "매장판매" 표시와 함께 보인다.
 const RestockItemTable = ({
   status,
   label,
@@ -76,7 +80,10 @@ const RestockItemTable = ({
                     >
                       <td className="px-3 py-2 whitespace-nowrap">{item.판매일자}</td>
                       <td className="px-3 py-2 whitespace-nowrap font-mono">{item.상품코드}</td>
-                      <td className="px-3 py-2 min-w-[160px]">{getProductName(item)}</td>
+                      <td className="px-3 py-2 min-w-[160px]">
+                        {getProductName(item)}
+                        {item.상태 === "storeSale" && <StoreSaleBadge className="ml-1.5" />}
+                      </td>
                       <td className="px-3 py-2 whitespace-nowrap">{item.칼라}</td>
                       <td className="px-3 py-2 whitespace-nowrap" title={`사이즈 코드 ${item.사이즈}`}>
                         {item.사이즈명 || item.사이즈}
@@ -139,10 +146,20 @@ const RestockItemTable = ({
 
 export default RestockItemTable;
 
+// 매장판매 항목 표시 (챙김 묶음 안에서 보낸 항목과 구분)
+const StoreSaleBadge = ({ className = "" }: { className?: string }) => (
+  <span
+    data-testid="restock-store-sale-badge"
+    className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 whitespace-nowrap ${className}`}
+  >
+    매장판매
+  </span>
+);
+
 type RestockItemCardProps = {
   id: string;
   item: RestockItem;
-  status: RestockStatus;
+  status: RestockGroupKey;
   stock: number | null;
   // 입고 알림 항목이면 계산 근거
   arrival?: ArrivalResult;
@@ -174,6 +191,7 @@ const RestockItemCard = ({
         {item.칼라} · {item.사이즈명 || item.사이즈}
       </span>
       <span className="text-sm whitespace-nowrap">{item.수량}개</span>
+      {item.상태 === "storeSale" && <StoreSaleBadge />}
       <span
         className={`text-sm whitespace-nowrap ${stock === 0 ? "text-red-500" : "text-gray-600"}`}
         title={stock === null ? "재고 엑셀에 없는 상품" : undefined}
@@ -220,7 +238,7 @@ type MobileItemActionsProps = {
   onChangeStatus: (change: RestockStatusChange) => void;
 };
 
-// 폰·워치 카드의 버튼 한 줄: [챙김] [매장 보관] [품절] 처럼 나란히 둔다
+// 폰·워치 카드의 버튼 한 줄: [챙김] [매장판매] [품절] 처럼 나란히 둔다
 const MobileItemActions = ({ item, disabled, onChangeStatus }: MobileItemActionsProps) => {
   const packedButton = (
     <button
@@ -242,34 +260,42 @@ const MobileItemActions = ({ item, disabled, onChangeStatus }: MobileItemActions
       되돌리기
     </button>
   );
-  const reasonButton = (reason: "keepInStore" | "soldOut", text: string) => (
+  const storeSaleButton = (text: string) => (
     <button
       type="button"
       disabled={disabled}
-      onClick={() => onChangeStatus({ 상태: "notPacked", 사유: reason })}
-      className={`${mobileButton} border border-amber-400 text-amber-700 hover:bg-amber-50`}
+      onClick={() => onChangeStatus({ 상태: "storeSale" })}
+      className={`${mobileButton} border border-indigo-400 text-indigo-700 hover:bg-indigo-50`}
     >
       {text}
+    </button>
+  );
+  const soldOutButton = (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onChangeStatus({ 상태: "notPacked", 사유: "soldOut" })}
+      className={`${mobileButton} border border-amber-400 text-amber-700 hover:bg-amber-50`}
+    >
+      품절
     </button>
   );
 
   return (
     <div className="flex gap-1.5">
-      {item.상태 === "packed" ? (
+      {item.상태 === "packed" || item.상태 === "storeSale" ? (
         undoButton
       ) : item.상태 === "notPacked" ? (
         <>
           {packedButton}
-          {item.사유 === "soldOut"
-            ? reasonButton("keepInStore", "매장 보관으로")
-            : reasonButton("soldOut", "품절로")}
+          {storeSaleButton("매장판매로")}
           {undoButton}
         </>
       ) : (
         <>
           {packedButton}
-          {reasonButton("keepInStore", "매장 보관")}
-          {reasonButton("soldOut", "품절")}
+          {storeSaleButton("매장판매")}
+          {soldOutButton}
         </>
       )}
     </div>
@@ -308,35 +334,43 @@ const ItemActions = ({ item, disabled, onChangeStatus, onDelete }: ItemActionsPr
       챙길 것으로 되돌리기
     </button>
   );
-  const reasonButton = (reason: "keepInStore" | "soldOut", text: string) => (
+  const storeSaleButton = (text: string) => (
     <button
       type="button"
       disabled={disabled}
-      onClick={() => onChangeStatus({ 상태: "notPacked", 사유: reason })}
-      className={`${buttonBase} border border-amber-400 text-amber-700 hover:bg-amber-50`}
+      onClick={() => onChangeStatus({ 상태: "storeSale" })}
+      className={`${buttonBase} border border-indigo-400 text-indigo-700 hover:bg-indigo-50`}
     >
       {text}
+    </button>
+  );
+  const soldOutButton = (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onChangeStatus({ 상태: "notPacked", 사유: "soldOut" })}
+      className={`${buttonBase} border border-amber-400 text-amber-700 hover:bg-amber-50`}
+    >
+      품절
     </button>
   );
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {item.상태 === "packed" ? (
+      {item.상태 === "packed" || item.상태 === "storeSale" ? (
         undoButton
       ) : item.상태 === "notPacked" ? (
         <>
           {packedButton}
-          {item.사유 === "soldOut"
-            ? reasonButton("keepInStore", "매장 보관으로 바꾸기")
-            : reasonButton("soldOut", "품절로 바꾸기")}
+          {storeSaleButton("매장판매로 바꾸기")}
           {undoButton}
         </>
       ) : (
         <>
           {packedButton}
+          {storeSaleButton("매장판매")}
           <span className="text-gray-400 text-xs ml-1">못 챙김:</span>
-          {reasonButton("keepInStore", "매장 보관")}
-          {reasonButton("soldOut", "품절")}
+          {soldOutButton}
         </>
       )}
       <button

@@ -419,6 +419,7 @@ function describe(item: ItemLine): string {
 
 function describeStatus(item: RestockItem): string {
   if (item.상태 === "packed") return "챙김";
+  if (item.상태 === "storeSale") return "매장판매";
   if (item.상태 === "notPacked")
     return `못 챙김(${item.사유 ? restockReasonLabels[item.사유] : "사유 없음"}, 기준재고 ${item.기준재고})`;
   return "챙길 것";
