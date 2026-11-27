@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { RestockStatusChange } from "../../firebase/firebaseDatabase";
-import type { RestockItem } from "../../types";
+import type { EventCategory, RestockItem } from "../../types";
 import type { ArrivalResult } from "../../utils/restockArrival";
 import {
   restockReasonLabels,
   type RestockEntry,
   type RestockGroupKey,
 } from "../../utils/restockView";
+import StockLocationBadge from "../ProductCard/StockLocationBadge";
 import ArrivalNote from "./ArrivalNote";
 
 type RestockItemTableProps = {
@@ -17,6 +18,8 @@ type RestockItemTableProps = {
   getCurrentStock: (item: RestockItem) => number | null;
   // 상품명이 비어 있을 때 /product에서 찾은 이름
   getProductName: (item: RestockItem) => string;
+  // 항목 상품의 행사장 분류 (행사장 목록에 없으면 null → 배지 없음)
+  getEventCategory: (item: RestockItem) => EventCategory | null;
   // 저장 중인 항목 id (버튼을 막는다)
   savingIds: ReadonlySet<string>;
   onChangeStatus: (id: string, change: RestockStatusChange) => void;
@@ -36,6 +39,7 @@ const RestockItemTable = ({
   entries,
   getCurrentStock,
   getProductName,
+  getEventCategory,
   savingIds,
   onChangeStatus,
   onDelete,
@@ -98,6 +102,7 @@ const RestockItemTable = ({
                   const stock = getCurrentStock(item);
                   const isSaving = savingIds.has(id);
                   const arrival = arrivals?.get(id);
+                  const category = getEventCategory(item);
                   return (
                     <tr
                       key={id}
@@ -106,7 +111,14 @@ const RestockItemTable = ({
                       className="border-t border-gray-100"
                     >
                       <td className="px-3 py-2 whitespace-nowrap">{item.판매일자}</td>
-                      <td className="px-3 py-2 whitespace-nowrap font-mono">{item.상품코드}</td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <span className="font-mono">{item.상품코드}</span>
+                        {category && (
+                          <span className="ml-1.5 align-middle">
+                            <StockLocationBadge location={category} />
+                          </span>
+                        )}
+                      </td>
                       <td className="px-3 py-2 min-w-[160px]">
                         {getProductName(item)}
                         {item.상태 === "storeSale" && <StoreSaleBadge className="ml-1.5" />}
@@ -158,6 +170,7 @@ const RestockItemTable = ({
                 item={item}
                 status={status}
                 stock={getCurrentStock(item)}
+                category={getEventCategory(item)}
                 arrival={arrivals?.get(id)}
                 disabled={savingIds.has(id)}
                 onChangeStatus={(change) => onChangeStatus(id, change)}
@@ -188,6 +201,8 @@ type RestockItemCardProps = {
   item: RestockItem;
   status: RestockGroupKey;
   stock: number | null;
+  // 행사장 분류 (없으면 배지 없음)
+  category: EventCategory | null;
   // 입고 알림 항목이면 계산 근거
   arrival?: ArrivalResult;
   disabled: boolean;
@@ -201,6 +216,7 @@ const RestockItemCard = ({
   item,
   status,
   stock,
+  category,
   arrival,
   disabled,
   onChangeStatus,
@@ -214,6 +230,7 @@ const RestockItemCard = ({
     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
       {/* 상품명 대신 품번(상품코드)을 메인으로 크게 보여 준다 */}
       <span className="text-base font-bold whitespace-nowrap">{item.상품코드}</span>
+      {category && <StockLocationBadge location={category} />}
       <span className="text-base font-semibold whitespace-nowrap">
         {item.칼라} · {item.사이즈명 || item.사이즈}
       </span>

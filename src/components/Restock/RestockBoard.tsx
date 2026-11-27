@@ -8,11 +8,19 @@ import {
   type RestockLists,
   type RestockStatusChange,
 } from "../../firebase/firebaseDatabase";
+import useEventCategories from "../../hooks/useEventCategories";
 import useProducts from "../../hooks/useProducts";
 import useProductUploadedAt from "../../hooks/useProductUploadedAt";
-import type { ProductType, RestockItem, RestockPresale, RestockReturn } from "../../types";
+import type {
+  EventCategory,
+  ProductType,
+  RestockItem,
+  RestockPresale,
+  RestockReturn,
+} from "../../types";
 import { getPhysicalStock, isIncomingActive } from "../../utils/physicalStock";
 import { computeArrival, type ArrivalResult } from "../../utils/restockArrival";
+import { isEventProduct } from "../../utils/stockLocation";
 import {
   countBySalesDate,
   filterBySalesDate,
@@ -47,6 +55,11 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     isLoaded: stockDateLoaded,
     hasError: stockDateError,
   } = useProductUploadedAt();
+  // 행사장 분류 배지용 (읽기만, 못 읽으면 배지 없이 목록만 보여 준다)
+  const { eventCategories } = useEventCategories();
+  // 행사장 목록에 없는 상품(이미 지운 상품)은 지금 분류를 알 수 없어 배지를 붙이지 않는다
+  const getEventCategory = (item: RestockItem): EventCategory | null =>
+    isEventProduct(eventCategories, item.상품코드) ? eventCategories[item.상품코드] : null;
   const productMap = useMemo(() => {
     const map = new Map<string, ProductType>();
     for (const product of products) map.set(product.상품코드, product);
@@ -346,6 +359,7 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
           entries={arrivedEntries}
           getCurrentStock={getCurrentStock}
           getProductName={getProductName}
+          getEventCategory={getEventCategory}
           savingIds={savingIds}
           onChangeStatus={handleChangeStatus}
           onDelete={handleDelete}
@@ -384,6 +398,7 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
           }
           getCurrentStock={getCurrentStock}
           getProductName={getProductName}
+          getEventCategory={getEventCategory}
           savingIds={savingIds}
           onChangeStatus={handleChangeStatus}
           onDelete={handleDelete}
