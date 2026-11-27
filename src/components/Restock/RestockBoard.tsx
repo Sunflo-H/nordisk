@@ -387,6 +387,8 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
           savingIds={savingIds}
           onChangeStatus={handleChangeStatus}
           onDelete={handleDelete}
+          // 챙김 묶음(챙김·매장판매)과 못 챙김은 평소에 접어 둔다 (입고 알림·챙길 것은 늘 펼침)
+          collapsible={status === "packed" || status === "notPacked"}
         />
       ))}
     </div>

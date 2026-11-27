@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { RestockStatusChange } from "../../firebase/firebaseDatabase";
 import type { RestockItem } from "../../types";
 import type { ArrivalResult } from "../../utils/restockArrival";
@@ -24,6 +25,8 @@ type RestockItemTableProps = {
   arrivals?: ReadonlyMap<string, ArrivalResult>;
   // data-testid (기본값: restock-group-{status})
   testId?: string;
+  // true면 제목을 눌러 펼치고 접는다. 처음엔 접혀 있다 (챙김·못 챙김 묶음, spec.md "챙김 묶음 접기")
+  collapsible?: boolean;
 };
 
 // 상태 묶음 하나(챙길 것 / 못 챙김 / 챙김)의 표. 매장판매 항목은 챙김 묶음에 "매장판매" 표시와 함께 보인다.
@@ -38,13 +41,37 @@ const RestockItemTable = ({
   onDelete,
   arrivals,
   testId,
+  collapsible = false,
 }: RestockItemTableProps) => {
+  // 펼침 여부는 화면 상태로만 둔다 (저장하지 않아 열 때마다 접힌 상태로 시작)
+  const [isOpen, setIsOpen] = useState(false);
+  const showEntries = !collapsible || isOpen;
+  const title = (
+    <>
+      {label} <span className="text-gray-500 font-normal">{entries.length}개</span>
+    </>
+  );
   return (
     <section className="mt-6" data-testid={testId ?? `restock-group-${status}`}>
-      <h3 className={`font-semibold mb-2 ${arrivals ? "text-sky-700" : ""}`}>
-        {label} <span className="text-gray-500 font-normal">{entries.length}개</span>
-      </h3>
-      {entries.length === 0 ? (
+      {collapsible ? (
+        <h3 className="font-semibold mb-2">
+          <button
+            type="button"
+            onClick={() => setIsOpen((open) => !open)}
+            aria-expanded={isOpen}
+            data-testid="restock-group-toggle"
+            className="w-full flex items-center gap-1 cursor-pointer text-left px-3 py-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50"
+          >
+            <span>{title}</span>
+            <span className="ml-auto text-sm text-gray-500 font-normal">
+              {isOpen ? "접기 ▲" : "펼치기 ▼"}
+            </span>
+          </button>
+        </h3>
+      ) : (
+        <h3 className={`font-semibold mb-2 ${arrivals ? "text-sky-700" : ""}`}>{title}</h3>
+      )}
+      {!showEntries ? null : entries.length === 0 ? (
         <p className="text-sm text-gray-400 px-1">없음</p>
       ) : (
         <>
