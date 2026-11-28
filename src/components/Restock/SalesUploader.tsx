@@ -16,11 +16,11 @@ import { parseSalesExcel, type ParseSalesResult } from "../../utils/salesParser"
 type SalesUploaderProps = {
   // 매장 판매 표시 이름 (비어 있으면 업로드를 막는다)
   storeSaleName: string;
-  // 저장에 성공한 뒤 챙길 목록을 다시 읽는다
-  onSaved: () => Promise<void>;
+  // 저장에 성공한 뒤 할 일 (선택)
+  onSaved?: () => Promise<void>;
 };
 
-// 판매내역 업로드 (PC·폰·워치 모두 쓴다)
+// 판매내역 업로드 (PC 전용, 2026-11-28부터 홈 업로드 묶음에 있다. 그 전에는 판매분 챙기기에서 폰·워치도 썼다)
 // 파일 선택 → 검사·판별 → 미리보기 확인창 → 확인하면 /restock에 쓰기 한 번 → 끝난 뒤 결과 알림
 const SalesUploader = ({ storeSaleName, onSaved }: SalesUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -45,15 +45,15 @@ const SalesUploader = ({ storeSaleName, onSaved }: SalesUploaderProps) => {
     setIsUploading(true);
     try {
       const saved = await uploadSalesFile(file, storeSaleName);
-      if (saved) await onSaved();
+      if (saved) await onSaved?.();
     } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <section className="max-w-[480px] mx-auto mt-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
-      <h2 className="font-semibold mb-1">판매내역 업로드</h2>
+    <section data-testid="sales-uploader">
+      <h3 className="font-semibold mb-1">판매내역</h3>
       <p className="text-sm text-gray-500 mb-3">
         금일상품별판매내역 엑셀을 올리면 행사장 판매를 골라 챙길 목록을
         만듭니다. 이미 저장된 판매일자는 다시 저장하지 않습니다.

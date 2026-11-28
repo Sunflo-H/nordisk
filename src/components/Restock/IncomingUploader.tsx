@@ -14,7 +14,7 @@ type IncomingUploaderProps = {
   onSaved: () => Promise<void>;
 };
 
-// 금일 입고 업로드 (PC 전용, 2026-11-17 사용자 결정. 2026-11-27부터 입고 상품 확인 페이지에 있다)
+// 금일 입고 업로드 (PC 전용, 2026-11-17 사용자 결정. 2026-11-28부터 홈 업로드 묶음에 있다)
 // 그날 입고가 아직 매장에 도착하지 않았을 때 올리면 전산재고에서 빼 실물재고로 계산한다.
 // 파일 선택 → 검사 → 미리보기 확인창 → 확인하면 /restock/incoming을 통째로 덮어쓴다
 const IncomingUploader = ({ incoming, onSaved }: IncomingUploaderProps) => {
@@ -39,9 +39,9 @@ const IncomingUploader = ({ incoming, onSaved }: IncomingUploaderProps) => {
   return (
     <section
       data-testid="restock-incoming-uploader"
-      className="hidden sm:block max-w-[480px] mx-auto p-4 bg-white rounded-xl shadow-sm border border-gray-200"
+      className="p-4 bg-white rounded-xl shadow-sm border border-gray-200"
     >
-      <h2 className="font-semibold mb-1">금일 입고 업로드 (아직 도착 안 했을 때만)</h2>
+      <h3 className="font-semibold mb-1">금일 입고 (아직 도착 안 했을 때만)</h3>
       <p className="text-sm text-gray-500 mb-3">
         전산재고에는 잡혔지만 실물이 아직 안 온 입고 엑셀을 올리면, 재고에서 빼서
         실물재고로 챙깁니다. 순서: 재고 엑셀 → 금일 입고 → 판매내역. 다시 올리면

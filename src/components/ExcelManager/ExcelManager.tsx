@@ -14,7 +14,7 @@ import {
 } from "../../utils/uploadSummary";
 import { toLocalDateString } from "../../utils/date";
 
-// 엑셀 업로드·데이터 삭제 버튼 (PC 전용)
+// 재고 엑셀 업로드·데이터 삭제 버튼 (PC 전용, 홈 업로드 묶음 안에 있다)
 // 업로드: 파일 선택 → 검사 → 요약 확인창 → 확인하면 /product 전체 교체 → 저장이 끝난 뒤 결과 알림
 const ExcelManager = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -49,27 +49,33 @@ const ExcelManager = () => {
   };
 
   return (
-    <div className="hidden sm:flex justify-around mb-10 gap-4 ">
-      <input
-        type="file"
-        accept=".xlsx, .xls"
-        onChange={handleFileUpload}
-        ref={fileInputRef}
-        className="hidden"
-      />
-      <button
-        type="button"
-        onClick={handleFileInput}
-        disabled={isUploading}
-        className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block disabled:bg-gray-300 disabled:cursor-not-allowed"
-      >
-        {isUploading ? "업로드 중..." : "엑셀 파일 업로드"}
-      </button>
-      <div
-        className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
-        onClick={handleDeleteAllProducts}
-      >
-        데이터 삭제
+    <div
+      data-testid="stock-excel-uploader"
+      className="p-4 bg-white rounded-xl shadow-sm border border-gray-200"
+    >
+      <h3 className="font-semibold mb-3">재고 엑셀</h3>
+      <div className="flex gap-2">
+        <input
+          type="file"
+          accept=".xlsx, .xls"
+          onChange={handleFileUpload}
+          ref={fileInputRef}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={handleFileInput}
+          disabled={isUploading}
+          className="flex-1 cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          {isUploading ? "업로드 중..." : "엑셀 파일 업로드"}
+        </button>
+        <div
+          className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
+          onClick={handleDeleteAllProducts}
+        >
+          데이터 삭제
+        </div>
       </div>
     </div>
   );

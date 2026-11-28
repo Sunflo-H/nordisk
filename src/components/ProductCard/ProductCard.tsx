@@ -10,8 +10,6 @@ type ProductCardProps = {
   action?: ReactNode;
   // 재고 위치 배지 (선택). 없으면 배지를 보여 주지 않는다.
   stockLocation?: StockLocation;
-  // 칼라 칩에 보일 칼라 (선택). 없으면 상품의 모든 칼라. 입고 상품 확인에서는 입고된 칼라만 넘긴다.
-  colors?: string[];
   // 카드에 보일 상품코드 (선택). 없으면 상품코드 그대로. 숫자순 정렬에서는 25201(OUU) 모양을 넘긴다.
   displayCode?: string;
 };
@@ -20,7 +18,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   product,
   action,
   stockLocation,
-  colors,
   displayCode,
 }) => {
   const { 상품코드, 상품명, 칼라, 판매가 } = product;
@@ -56,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <div className="flex flex-wrap items-center gap-1 text-start">
             {/* 재고 위치 배지는 색상 칩 앞에 둔다 (상품코드 줄에 두면 "빼기" 버튼이 있는 카드가 좁아진다) */}
             {stockLocation && <StockLocationBadge location={stockLocation} />}
-            {(colors ?? 칼라).map((color, i) => (
+            {칼라.map((color, i) => (
               <span
                 key={i}
                 className="text-[10px] px-1 py-0.5 bg-gray-100 text-gray-800 rounded-full text-center"

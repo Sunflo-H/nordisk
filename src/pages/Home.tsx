@@ -1,8 +1,8 @@
 import { Link } from "react-router";
-import ExcelManager from "../components/ExcelManager/ExcelManager";
 import StockDate from "../components/StockDate/StockDate";
+import UploadPanel from "../components/Upload/UploadPanel";
 
-// 앱 시작 화면: 재고 관리·행사장 재고 관리 페이지로 이동하는 네비게이션과 엑셀 데이터 관리 버튼을 제공한다.
+// 앱 시작 화면: 각 페이지로 이동하는 버튼과, PC에서 날마다 올리는 파일 업로드 묶음을 둔다.
 const Home = () => {
   return (
     <div className="relative min-h-screen bg-gray-50 text-gray-800">
@@ -38,16 +38,9 @@ const Home = () => {
           >
             지운 행사장 상품
           </Link>
-          {/* 입고 상품 확인: 목록은 폰에서도 보므로 모든 화면에서 보인다 (업로드만 PC 전용) */}
-          <Link
-            to="/incoming"
-            className="block w-full py-3 bg-white text-sky-600! text-center font-semibold rounded-xl shadow-md border border-sky-500 hover:bg-sky-50 transition-colors"
-          >
-            입고 상품 확인
-          </Link>
         </nav>
 
-        <ExcelManager />
+        <UploadPanel />
       </div>
     </div>
   );
