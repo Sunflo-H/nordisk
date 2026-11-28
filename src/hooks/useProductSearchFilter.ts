@@ -6,6 +6,7 @@ import {
   emptyFilterOptions,
   getSearchedFilteredData,
 } from "../utils/productFilter";
+import { sortProducts, type ProductSortMode } from "../utils/productSort";
 
 export type ProductSearchFilter = {
   keyword: string;
@@ -14,8 +15,11 @@ export type ProductSearchFilter = {
   toggleFilterOption: (key: keyof FilterOptionsType, option: string) => void;
   // 검색어와 칩을 모두 지운다 ("필터 초기화"·"해제" 공용)
   clearFilter: () => void;
-  // 검색어·칩을 건 결과
+  // 검색어·칩을 건 결과 (정렬 방식대로 정렬됨)
   filteredProducts: ProductType[];
+  // 목록 정렬 방식 (spec.md "숫자순 정렬"). 필터 초기화·해제와 상관없이 따로 유지된다.
+  sortMode: ProductSortMode;
+  setSortMode: (mode: ProductSortMode) => void;
   // 칩 옆 상품 수 (검색어와 다른 항목 선택을 반영해 실시간으로 센다)
   optionCounts: Record<keyof FilterOptionsType, Record<string, number>>;
   // 검색어나 칩이 하나라도 걸려 있는지
@@ -27,10 +31,15 @@ function useProductSearchFilter(products: ProductType[]): ProductSearchFilter {
   const [keyword, setKeyword] = useState("");
   const [filterOptions, setFilterOptions] =
     useState<FilterOptionsType>(emptyFilterOptions);
+  const [sortMode, setSortMode] = useState<ProductSortMode>("code");
 
   const filteredProducts = useMemo(
-    () => getSearchedFilteredData(products, keyword, filterOptions),
-    [products, keyword, filterOptions]
+    () =>
+      sortProducts(
+        getSearchedFilteredData(products, keyword, filterOptions),
+        sortMode
+      ),
+    [products, keyword, filterOptions, sortMode]
   );
 
   const optionCounts = useMemo(
@@ -69,6 +78,8 @@ function useProductSearchFilter(products: ProductType[]): ProductSearchFilter {
     toggleFilterOption,
     clearFilter,
     filteredProducts,
+    sortMode,
+    setSortMode,
     optionCounts,
     isFiltering:
       keyword.trim() !== "" || countSelectedOptions(filterOptions) > 0,

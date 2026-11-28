@@ -12,6 +12,8 @@ type ProductCardProps = {
   stockLocation?: StockLocation;
   // 칼라 칩에 보일 칼라 (선택). 없으면 상품의 모든 칼라. 입고 상품 확인에서는 입고된 칼라만 넘긴다.
   colors?: string[];
+  // 카드에 보일 상품코드 (선택). 없으면 상품코드 그대로. 숫자순 정렬에서는 25201(OUU) 모양을 넘긴다.
+  displayCode?: string;
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -19,6 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   action,
   stockLocation,
   colors,
+  displayCode,
 }) => {
   const { 상품코드, 상품명, 칼라, 판매가 } = product;
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -39,7 +42,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {/* 왼쪽이 남는 폭을 채워 가격이 카드마다 같은 자리(오른쪽)에 오게 한다 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 min-w-0 mb-1 text-start">
-            <span className="text-xl shrink-0">{상품코드}</span>
+            <span className="text-xl shrink-0">{displayCode ?? 상품코드}</span>
             {/* 상품명은 PC에서만 (spec.md "PC·모바일 나누기"). 길면 말줄임 */}
             {상품명 && (
               <span

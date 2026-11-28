@@ -4,6 +4,8 @@ import type { EventCategoryMap, ProductType } from "../../types";
 import MobileFilter from "../Filter/MobileFilter";
 import ProductCard from "../ProductCard/ProductCard";
 import { getStockLocation } from "../../utils/stockLocation";
+import { getDisplayCode } from "../../utils/productSort";
+import SortModeToggle from "./SortModeToggle";
 
 type ProductListViewProps = {
   // 페이지의 검색·필터 상태 (검색·필터 영역은 페이지 위쪽에 따로 둔다)
@@ -21,10 +23,12 @@ const ProductListView: React.FC<ProductListViewProps> = ({
   renderCardAction,
   eventCategories,
 }) => {
-  const { filteredProducts, isFiltering, clearFilter } = search;
+  const { filteredProducts, isFiltering, clearFilter, sortMode, setSortMode } =
+    search;
 
   return (
     <>
+      <SortModeToggle sortMode={sortMode} onChange={setSortMode} />
       {isFiltering && (
         // 필터 적용 상태 줄: 검색·필터 영역을 닫아도 지금 목록이 걸러진 것인지 알려 준다.
         <div
@@ -49,6 +53,7 @@ const ProductListView: React.FC<ProductListViewProps> = ({
             <ProductCard
               product={product}
               key={product.상품코드}
+              displayCode={getDisplayCode(product.상품코드, sortMode)}
               action={renderCardAction?.(product)}
               stockLocation={
                 eventCategories &&
