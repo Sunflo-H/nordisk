@@ -1,27 +1,38 @@
 import type { StockLocation } from "../../types";
-import { stockLocationLabels } from "../../utils/stockLocation";
+import {
+  getLocationBadges,
+  locationBadgeLabels,
+  type LocationBadge,
+} from "../../utils/stockLocation";
 
-// 재고 위치별 배지 색 (행사장은 홈의 행사장 버튼과 같은 초록 계열)
-const badgeColors: Record<StockLocation, string> = {
-  event_only: "bg-emerald-100 text-emerald-700",
-  store_only: "bg-blue-100 text-blue-700",
-  both: "bg-violet-100 text-violet-700",
-  unclassified: "bg-amber-100 text-amber-700",
+// 배지 색 (매장은 파랑, 행사장은 홈의 행사장 버튼과 같은 초록 계열)
+const badgeColors: Record<LocationBadge, string> = {
+  store: "bg-blue-100 text-blue-700",
+  event: "bg-emerald-100 text-emerald-700",
 };
 
 type StockLocationBadgeProps = {
   location: StockLocation;
 };
 
-// 상품 카드에 붙는 "행사장만 / 매장만 / 둘 다 / 미분류" 배지
+// 상품 카드에 붙는 분류 배지: [매장] / [행사장] / 둘 다 있으면 [매장] [행사장]
 const StockLocationBadge: React.FC<StockLocationBadgeProps> = ({
   location,
 }) => (
   <span
     data-testid="stock-location"
-    className={`px-1 py-0.5 text-[10px] font-semibold rounded whitespace-nowrap ${badgeColors[location]}`}
+    data-location={location}
+    className="inline-flex items-center gap-0.5"
   >
-    {stockLocationLabels[location]}
+    {getLocationBadges(location).map((badge) => (
+      <span
+        key={badge}
+        data-testid="stock-location-badge"
+        className={`px-1 py-0.5 text-[10px] font-semibold rounded whitespace-nowrap ${badgeColors[badge]}`}
+      >
+        {locationBadgeLabels[badge]}
+      </span>
+    ))}
   </span>
 );
 

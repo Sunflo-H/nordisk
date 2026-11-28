@@ -12,10 +12,7 @@ import {
   getSearchedFilteredData,
   yearOptions,
 } from "../../utils/productFilter";
-import {
-  selectableEventCategories,
-  stockLocationLabels,
-} from "../../utils/stockLocation";
+import { locationBadgeLabels } from "../../utils/stockLocation";
 import FilterChipGroup from "../Filter/FilterChipGroup";
 
 type EventProductPickerProps = {
@@ -29,8 +26,10 @@ type EventProductPickerProps = {
 
 // 행사장 상품 선택 영역 (PC 전용)
 // 상품코드·상품명 검색 + 연도·성별·카테고리 칩 필터 + "선택한 것만 보기"로 좁혀 고르고,
-// 체크한 상품마다 "행사장만 / 둘 다"를 고르고, 체크한 목록을 분류와 함께 그대로 행사장 목록으로 저장한다.
-// 화면에서 가려진 상품도 체크 상태는 그대로 남고, 저장하면 함께 저장된다.
+// 상품마다 [매장]·[행사장] 버튼을 켜고 꺼서 분류를 고르고, [행사장]이 켜진 상품을 분류와 함께 그대로 행사장 목록으로 저장한다.
+//   [매장]은 모든 상품이 처음부터 켜져 있다. [행사장]만 켜면 둘 다(both), [매장]을 끄면 행사장만(event_only).
+//   [행사장]을 끄면 목록에서 빠지고 [매장]은 다시 켜진다. [행사장]이 꺼져 있으면 [매장]은 끌 수 없다.
+// 화면에서 가려진 상품도 선택 상태는 그대로 남고, 저장하면 함께 저장된다.
 // 부모에서 key로 행사장 목록(상품코드·분류)을 넘겨, 목록을 다시 읽으면 체크 상태가 새로 초기화된다.
 const EventProductPicker: React.FC<EventProductPickerProps> = ({
   allProducts,
@@ -38,10 +37,19 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
   onSaved,
 }) => {
   const [keyword, setKeyword] = useState("");
-  // 체크된 상품코드 → 분류. /product에 없는 기존 코드도 그대로 두어 저장할 때 지워지지 않게 한다.
+  // 행사장이 켜진 상품코드 → 분류. /product에 없는 기존 코드도 그대로 두어 저장할 때 지워지지 않게 한다.
+  // 미분류(예전 값 true)는 매장+행사장으로 보고 both로 둔다 (저장하면 both로 바뀐다, 2026-11-27 사용자 승인)
   const [selectedCategories, setSelectedCategories] = useState<
     Map<string, EventCategory>
-  >(() => new Map(Object.entries(eventCategories)));
+  >(
+    () =>
+      new Map(
+        Object.entries(eventCategories).map(([code, category]) => [
+          code,
+          category === "unclassified" ? "both" : category,
+        ])
+      )
+  );
   const [isSaving, setIsSaving] = useState(false);
   // 칩 필터 (같은 항목 안은 OR, 항목끼리는 AND — /inventory 필터와 같은 규칙)
   const [filterOptions, setFilterOptions] = useState<FilterOptionsType>({
@@ -78,33 +86,24 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
   const resetFilters = () =>
     setFilterOptions({ year: [], gender: [], category: [] });
 
-  // 체크를 끈 상품의 분류를 기억해 두었다가, 다시 켜면 그 분류로 되살린다
-  const [uncheckedCategories, setUncheckedCategories] = useState<
-    Map<string, EventCategory>
-  >(() => new Map());
-
-  // 체크를 켜면 기억해 둔 분류(없으면 미분류)로 추가하고, 끄면 분류를 기억해 둔 뒤 뺀다
-  const toggleCode = (code: string) => {
-    const current = selectedCategories.get(code);
-    const next = new Map(selectedCategories);
-    if (current !== undefined) {
-      next.delete(code);
-      setUncheckedCategories((prev) => new Map(prev).set(code, current));
-    } else {
-      next.set(code, uncheckedCategories.get(code) ?? "unclassified");
-    }
-    setSelectedCategories(next);
+  // [행사장] 켜기/끄기: 켜면 매장이 켜진 상태라 둘 다(both)로 넣고, 끄면 목록에서 뺀다 (매장만으로 돌아감)
+  const toggleEvent = (code: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Map(prev);
+      if (next.has(code)) next.delete(code);
+      else next.set(code, "both");
+      return next;
+    });
   };
 
-  // 체크된 상품의 분류를 바꾼다
-  const setCategory = (code: string, category: EventCategory) => {
-    setSelectedCategories((prev) => new Map(prev).set(code, category));
+  // [매장] 켜기/끄기: 행사장이 켜진 상품만 바꿀 수 있다 (둘 다 ↔ 행사장만)
+  const toggleStore = (code: string) => {
+    setSelectedCategories((prev) => {
+      const current = prev.get(code);
+      if (current === undefined) return prev;
+      return new Map(prev).set(code, current === "event_only" ? "both" : "event_only");
+    });
   };
-
-  // 아직 분류하지 않은 상품 수 (저장은 되지만 눈에 띄게 알려 준다)
-  const unclassifiedCount = [...selectedCategories.values()].filter(
-    (category) => category === "unclassified"
-  ).length;
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -166,7 +165,7 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
             onChange={(event) => setShowSelectedOnly(event.target.checked)}
             className="w-4 h-4"
           />
-          선택한 것만 보기
+          행사장 상품만 보기
         </label>
         <div className="flex items-center gap-3 text-sm text-gray-500">
           <span>{visibleProducts.length}개 표시</span>
@@ -193,51 +192,43 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
         ) : (
           visibleProducts.map((product) => {
             const category = selectedCategories.get(product.상품코드);
+            const isEventOn = category !== undefined;
+            const isStoreOn = category !== "event_only";
             return (
               <li
                 key={product.상품코드}
-                className="flex items-center gap-2 pr-3 hover:bg-gray-50"
+                data-testid="picker-row"
+                data-product-code={product.상품코드}
+                className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50"
               >
-                <label className="flex flex-1 min-w-0 items-center gap-3 px-3 py-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={category !== undefined}
-                    onChange={() => toggleCode(product.상품코드)}
-                    className="w-4 h-4"
-                  />
+                <div className="flex flex-1 min-w-0 items-center gap-3">
                   <span className="font-mono text-sm">{product.상품코드}</span>
                   <span className="text-sm text-gray-600 truncate">
                     {product.상품명}
                   </span>
-                </label>
-                {category !== undefined && (
-                  // 체크된 상품만 분류를 고른다. 미분류면 주황 글씨로 알려 준다.
-                  <div
-                    data-testid="category-select"
-                    className="flex shrink-0 items-center gap-1"
-                  >
-                    {category === "unclassified" && (
-                      <span className="text-xs font-semibold text-amber-600">
-                        {stockLocationLabels.unclassified}
-                      </span>
-                    )}
-                    {selectableEventCategories.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        aria-pressed={category === option}
-                        onClick={() => setCategory(product.상품코드, option)}
-                        className={`px-2 py-0.5 text-xs rounded border transition-colors ${
-                          category === option
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
-                        }`}
-                      >
-                        {stockLocationLabels[option]}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                </div>
+                <div
+                  data-testid="category-select"
+                  className="flex shrink-0 items-center gap-1"
+                >
+                  <LocationToggle
+                    testId="toggle-store"
+                    label={locationBadgeLabels.store}
+                    isOn={isStoreOn}
+                    onClass="bg-blue-500 text-white border-blue-500"
+                    // 행사장이 꺼져 있으면 매장은 끌 수 없다 (둘 다 꺼진 상품은 없다)
+                    disabled={!isEventOn}
+                    title={!isEventOn ? "행사장이 꺼져 있으면 매장은 끌 수 없습니다" : undefined}
+                    onClick={() => toggleStore(product.상품코드)}
+                  />
+                  <LocationToggle
+                    testId="toggle-event"
+                    label={locationBadgeLabels.event}
+                    isOn={isEventOn}
+                    onClass="bg-emerald-500 text-white border-emerald-500"
+                    onClick={() => toggleEvent(product.상품코드)}
+                  />
+                </div>
               </li>
             );
           })
@@ -246,12 +237,7 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
 
       <div className="flex items-center justify-between mt-3">
         <span className="text-sm text-gray-600">
-          선택 {selectedCategories.size}개
-          {unclassifiedCount > 0 && (
-            <span className="ml-2 font-semibold text-amber-600">
-              · 미분류 {unclassifiedCount}개
-            </span>
-          )}
+          행사장 {selectedCategories.size}개
         </span>
         <button
           type="button"
@@ -267,3 +253,39 @@ const EventProductPicker: React.FC<EventProductPickerProps> = ({
 };
 
 export default EventProductPicker;
+
+type LocationToggleProps = {
+  testId: string;
+  label: string;
+  isOn: boolean;
+  // 켜졌을 때의 색
+  onClass: string;
+  disabled?: boolean;
+  title?: string;
+  onClick: () => void;
+};
+
+// [매장]·[행사장] 켜고 끄는 버튼 (화면 상태만 바꾸고, "저장"을 눌러야 DB에 반영된다)
+const LocationToggle = ({
+  testId,
+  label,
+  isOn,
+  onClass,
+  disabled = false,
+  title,
+  onClick,
+}: LocationToggleProps) => (
+  <button
+    type="button"
+    data-testid={testId}
+    aria-pressed={isOn}
+    disabled={disabled}
+    title={title}
+    onClick={onClick}
+    className={`px-2 py-0.5 text-xs rounded border transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+      isOn ? onClass : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+    }`}
+  >
+    {label}
+  </button>
+);
