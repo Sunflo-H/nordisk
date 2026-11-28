@@ -38,6 +38,13 @@ const Home = () => {
           >
             지운 행사장 상품
           </Link>
+          {/* 입고 상품 확인: 목록은 폰에서도 보므로 모든 화면에서 보인다 (업로드만 PC 전용) */}
+          <Link
+            to="/incoming"
+            className="block w-full py-3 bg-white text-sky-600! text-center font-semibold rounded-xl shadow-md border border-sky-500 hover:bg-sky-50 transition-colors"
+          >
+            입고 상품 확인
+          </Link>
         </nav>
 
         <ExcelManager />

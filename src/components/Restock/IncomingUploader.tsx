@@ -4,16 +4,17 @@ import {
   saveRestockIncoming,
 } from "../../firebase/firebaseDatabase";
 import type { RestockIncoming } from "../../types";
+import { sumIncoming } from "../../utils/incomingView";
 import { parseIncomingExcel, type ParseIncomingResult } from "../../utils/incomingParser";
 
 type IncomingUploaderProps = {
   // 지금 저장된 금일 입고 (없으면 null)
   incoming: RestockIncoming | null;
-  // 저장에 성공한 뒤 챙길 목록을 다시 읽는다
+  // 저장에 성공한 뒤 화면 값을 다시 읽는다
   onSaved: () => Promise<void>;
 };
 
-// 금일 입고 업로드 (PC 전용, 2026-11-17 사용자 결정. 판매분 챙기기 화면의 다른 기능과 달리 모바일에서는 숨긴다)
+// 금일 입고 업로드 (PC 전용, 2026-11-17 사용자 결정. 2026-11-27부터 입고 상품 확인 페이지에 있다)
 // 그날 입고가 아직 매장에 도착하지 않았을 때 올리면 전산재고에서 빼 실물재고로 계산한다.
 // 파일 선택 → 검사 → 미리보기 확인창 → 확인하면 /restock/incoming을 통째로 덮어쓴다
 const IncomingUploader = ({ incoming, onSaved }: IncomingUploaderProps) => {
@@ -38,7 +39,7 @@ const IncomingUploader = ({ incoming, onSaved }: IncomingUploaderProps) => {
   return (
     <section
       data-testid="restock-incoming-uploader"
-      className="hidden sm:block max-w-[480px] mx-auto mt-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200"
+      className="hidden sm:block max-w-[480px] mx-auto p-4 bg-white rounded-xl shadow-sm border border-gray-200"
     >
       <h2 className="font-semibold mb-1">금일 입고 업로드 (아직 도착 안 했을 때만)</h2>
       <p className="text-sm text-gray-500 mb-3">
@@ -61,11 +62,6 @@ const IncomingUploader = ({ incoming, onSaved }: IncomingUploaderProps) => {
       >
         {isUploading ? "업로드 중..." : "금일 입고 엑셀 업로드"}
       </button>
-      {incoming && (
-        <p className="text-sm text-gray-500 mt-2" data-testid="restock-incoming-saved">
-          저장된 금일 입고: 재고일 {incoming.재고일}, {sumIncoming(incoming)}장
-        </p>
-      )}
     </section>
   );
 };
@@ -136,15 +132,3 @@ async function uploadIncomingFile(
   return true;
 }
 
-// 금일 입고 전체 수량
-function sumIncoming(incoming: RestockIncoming): number {
-  let total = 0;
-  for (const colors of Object.values(incoming.수량 ?? {})) {
-    for (const sizes of Object.values(colors ?? {})) {
-      for (const quantity of Object.values(sizes ?? {})) {
-        if (typeof quantity === "number") total += quantity;
-      }
-    }
-  }
-  return total;
-}

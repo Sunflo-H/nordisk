@@ -7,6 +7,7 @@ import Home from "./pages/Home.tsx";
 import EventInventory from "./pages/EventInventory.tsx";
 import EventRestock from "./pages/EventRestock.tsx";
 import EventDeletedProducts from "./pages/EventDeletedProducts.tsx";
+import IncomingProducts from "./pages/IncomingProducts.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="event" element={<EventInventory />} />
         <Route path="event/restock" element={<EventRestock />} />
         <Route path="event/deleted" element={<EventDeletedProducts />} />
+        <Route path="incoming" element={<IncomingProducts />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
