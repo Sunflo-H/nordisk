@@ -113,10 +113,11 @@ const RestockItemTable = ({
                       <td className="px-3 py-2 whitespace-nowrap">{item.판매일자}</td>
                       <td className="px-3 py-2 whitespace-nowrap">
                         <span className="font-mono">{item.상품코드}</span>
+                        {/* 배지는 상품코드 아래 줄에 둔다 (옆에 두면 칸이 넓어져 표가 화면 밖으로 밀린다) */}
                         {category && (
-                          <span className="ml-1.5 align-middle">
+                          <div className="mt-0.5 leading-none">
                             <StockLocationBadge location={category} />
-                          </span>
+                          </div>
                         )}
                       </td>
                       <td className="px-3 py-2 min-w-[160px]">
@@ -135,12 +136,13 @@ const RestockItemTable = ({
                         {stock ?? "-"}
                       </td>
                       {status === "notPacked" && (
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          <span className="font-medium">
+                        <td className="px-3 py-2 min-w-[220px]">
+                          {/* 줄바꿈되게 둔다 (입고 근거 줄까지 한 줄로 고정하면 표가 화면 밖으로 밀린다) */}
+                          <span className="font-medium whitespace-nowrap">
                             {item.사유 ? restockReasonLabels[item.사유] : "사유 없음"}
                           </span>
-                          <span className="text-gray-500">
-                            {" "}
+                          {" "}
+                          <span className="text-gray-500 whitespace-nowrap">
                             · 기준재고 {item.기준재고 ?? "-"} ({item.기준일 ?? "-"})
                           </span>
                           {arrival && <ArrivalNote arrival={arrival} />}
