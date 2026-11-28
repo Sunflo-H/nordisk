@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   SalesDateConflictError,
   readAllProducts,
@@ -8,77 +8,65 @@ import {
   readSalesDates,
   saveSalesUpload,
 } from "../../firebase/firebaseDatabase";
+import type { UploadedAtState } from "../../hooks/useUploadStatus";
 import { toLocalDateString } from "../../utils/date";
 import { getPhysicalStock, isIncomingActive } from "../../utils/physicalStock";
 import { planSalesUpload, type SalesUploadPlan } from "../../utils/restockPlan";
 import { parseSalesExcel, type ParseSalesResult } from "../../utils/salesParser";
+import UploadRow from "../Upload/UploadRow";
 
 type SalesUploaderProps = {
   // 매장 판매 표시 이름 (비어 있으면 업로드를 막는다)
   storeSaleName: string;
-  // 저장에 성공한 뒤 할 일 (선택)
-  onSaved?: () => Promise<void>;
+  // 판매내역을 마지막으로 올린 날
+  uploadedAt: UploadedAtState;
+  // 저장에 성공한 뒤 할 일
+  onSaved: () => Promise<void>;
+  // 줄 아래에 붙일 내용 (매장 판매 표시 이름)
+  children?: ReactNode;
 };
 
-// 판매내역 업로드 (PC 전용, 2026-11-28부터 홈 업로드 묶음에 있다. 그 전에는 판매분 챙기기에서 폰·워치도 썼다)
+// ⓘ 설명 (예전 카드의 안내 문구)
+const SALES_INFO =
+  "금일상품별판매내역 엑셀을 올리면 행사장 판매를 골라 챙길 목록을 만듭니다. 이미 저장된 판매일자는 다시 저장하지 않습니다. 고객명이 아래 매장 판매 이름이면 매장 판매로 봅니다.";
+
+// 판매내역 업로드 줄 (PC 전용, 2026-11-28부터 홈 업로드 묶음에 있다. 그 전에는 판매분 챙기기에서 폰·워치도 썼다)
 // 파일 선택 → 검사·판별 → 미리보기 확인창 → 확인하면 /restock에 쓰기 한 번 → 끝난 뒤 결과 알림
-const SalesUploader = ({ storeSaleName, onSaved }: SalesUploaderProps) => {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+const SalesUploader = ({ storeSaleName, uploadedAt, onSaved, children }: SalesUploaderProps) => {
   // 처리 중에는 버튼을 막아 중복 저장을 막는다
   const [isUploading, setIsUploading] = useState(false);
-  const hasStoreSaleName = storeSaleName.trim() !== "";
 
-  const handleButtonClick = () => {
-    if (!hasStoreSaleName) {
+  // 이름 없이 [올리기]를 누르면 파일 선택창을 열지 않고 알린다
+  const checkStoreSaleName = () => {
+    if (storeSaleName.trim() === "") {
       alert("매장 판매 표시 이름을 먼저 입력해 주세요.");
-      return;
+      return false;
     }
-    fileInputRef.current?.click();
+    return true;
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // 같은 파일을 다시 골라도 onChange가 불리도록 선택값을 비워 둔다
-    e.target.value = "";
-    if (!file) return;
-
+  const handleFileSelected = async (file: File) => {
     setIsUploading(true);
     try {
       const saved = await uploadSalesFile(file, storeSaleName);
-      if (saved) await onSaved?.();
+      if (saved) await onSaved();
     } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <section data-testid="sales-uploader">
-      <h3 className="font-semibold mb-1">판매내역</h3>
-      <p className="text-sm text-gray-500 mb-3">
-        금일상품별판매내역 엑셀을 올리면 행사장 판매를 골라 챙길 목록을
-        만듭니다. 이미 저장된 판매일자는 다시 저장하지 않습니다.
-      </p>
-      <input
-        type="file"
-        accept=".xlsx, .xls"
-        onChange={handleFileChange}
-        ref={fileInputRef}
-        className="hidden"
-      />
-      <button
-        type="button"
-        onClick={handleButtonClick}
-        disabled={isUploading}
-        className="w-full cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-      >
-        {isUploading ? "업로드 중..." : "판매내역 엑셀 업로드"}
-      </button>
-      {!hasStoreSaleName && (
-        <p className="text-sm text-red-500 mt-2">
-          매장 판매 표시 이름을 입력해야 올릴 수 있습니다.
-        </p>
-      )}
-    </section>
+    <UploadRow
+      testId="sales-uploader"
+      label="판매내역"
+      info={SALES_INFO}
+      uploadedAt={uploadedAt}
+      isUploading={isUploading}
+      beforeOpen={checkStoreSaleName}
+      onFileSelected={(file) => void handleFileSelected(file)}
+    >
+      {children}
+    </UploadRow>
   );
 };
 

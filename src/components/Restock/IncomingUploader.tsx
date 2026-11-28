@@ -1,32 +1,34 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   readProductUploadedAt,
   saveRestockIncoming,
 } from "../../firebase/firebaseDatabase";
+import type { UploadedAtState } from "../../hooks/useUploadStatus";
 import type { RestockIncoming } from "../../types";
 import { sumIncoming } from "../../utils/incomingView";
 import { parseIncomingExcel, type ParseIncomingResult } from "../../utils/incomingParser";
+import UploadRow from "../Upload/UploadRow";
 
 type IncomingUploaderProps = {
   // 지금 저장된 금일 입고 (없으면 null)
   incoming: RestockIncoming | null;
+  // 금일 입고를 마지막으로 올린 날
+  uploadedAt: UploadedAtState;
   // 저장에 성공한 뒤 화면 값을 다시 읽는다
   onSaved: () => Promise<void>;
 };
 
-// 금일 입고 업로드 (PC 전용, 2026-11-17 사용자 결정. 2026-11-28부터 홈 업로드 묶음에 있다)
+// ⓘ 설명 (예전 카드의 안내 문구)
+const INCOMING_INFO =
+  "아직 도착 안 했을 때만 올립니다. 전산재고에는 잡혔지만 실물이 아직 안 온 입고 엑셀을 올리면, 재고에서 빼서 실물재고로 챙깁니다. 재고 엑셀을 먼저 올려 주세요. 다시 올리면 덮어씁니다.";
+
+// 금일 입고 업로드 줄 (PC 전용, 2026-11-17 사용자 결정. 2026-11-28부터 홈 업로드 묶음에 있다)
 // 그날 입고가 아직 매장에 도착하지 않았을 때 올리면 전산재고에서 빼 실물재고로 계산한다.
 // 파일 선택 → 검사 → 미리보기 확인창 → 확인하면 /restock/incoming을 통째로 덮어쓴다
-const IncomingUploader = ({ incoming, onSaved }: IncomingUploaderProps) => {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+const IncomingUploader = ({ incoming, uploadedAt, onSaved }: IncomingUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // 같은 파일을 다시 골라도 onChange가 불리도록 선택값을 비워 둔다
-    e.target.value = "";
-    if (!file) return;
-
+  const handleFileSelected = async (file: File) => {
     setIsUploading(true);
     try {
       const saved = await uploadIncomingFile(file, incoming);
@@ -37,32 +39,14 @@ const IncomingUploader = ({ incoming, onSaved }: IncomingUploaderProps) => {
   };
 
   return (
-    <section
-      data-testid="restock-incoming-uploader"
-      className="p-4 bg-white rounded-xl shadow-sm border border-gray-200"
-    >
-      <h3 className="font-semibold mb-1">금일 입고 (아직 도착 안 했을 때만)</h3>
-      <p className="text-sm text-gray-500 mb-3">
-        전산재고에는 잡혔지만 실물이 아직 안 온 입고 엑셀을 올리면, 재고에서 빼서
-        실물재고로 챙깁니다. 순서: 재고 엑셀 → 금일 입고 → 판매내역. 다시 올리면
-        덮어씁니다.
-      </p>
-      <input
-        type="file"
-        accept=".xlsx, .xls"
-        onChange={handleFileChange}
-        ref={fileInputRef}
-        className="hidden"
-      />
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
-        className="w-full cursor-pointer px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-      >
-        {isUploading ? "업로드 중..." : "금일 입고 엑셀 업로드"}
-      </button>
-    </section>
+    <UploadRow
+      testId="restock-incoming-uploader"
+      label="금일 입고"
+      info={INCOMING_INFO}
+      uploadedAt={uploadedAt}
+      isUploading={isUploading}
+      onFileSelected={(file) => void handleFileSelected(file)}
+    />
   );
 };
 

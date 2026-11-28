@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   deleteData,
   readAllProducts,
   replaceAllProducts,
 } from "../../firebase/firebaseDatabase";
+import type { UploadedAtState } from "../../hooks/useUploadStatus";
 import {
   parseInventoryExcel,
   type ParseExcelResult,
@@ -13,32 +14,47 @@ import {
   type UploadSummary,
 } from "../../utils/uploadSummary";
 import { toLocalDateString } from "../../utils/date";
+import UploadRow from "../Upload/UploadRow";
 
-// 재고 엑셀 업로드·데이터 삭제 버튼 (PC 전용, 홈 업로드 묶음 안에 있다)
+type ExcelManagerProps = {
+  // 재고 엑셀을 마지막으로 올린 날
+  uploadedAt: UploadedAtState;
+  // 올리기를 마친 뒤(저장·취소 상관없이) 올린 날을 다시 읽는다
+  onFinished: () => Promise<void>;
+};
+
+// 재고 엑셀 업로드 줄 (PC 전용, 홈 업로드 묶음 안에 있다)
 // 업로드: 파일 선택 → 검사 → 요약 확인창 → 확인하면 /product 전체 교체 → 저장이 끝난 뒤 결과 알림
-const ExcelManager = () => {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+const ExcelManager = ({ uploadedAt, onFinished }: ExcelManagerProps) => {
   // 업로드 처리 중에는 버튼을 막아 중복 저장을 막는다
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // 같은 파일을 다시 골라도 onChange가 불리도록 선택값을 비워 둔다
-    e.target.value = "";
-    if (!file) return;
-
+  const handleFileSelected = async (file: File) => {
     setIsUploading(true);
     try {
       await uploadExcelFile(file);
+      // uploadExcelFile은 저장 여부를 돌려주지 않으므로 끝나면 늘 다시 읽는다 (읽기만)
+      await onFinished();
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleFileInput = () => {
-    fileInputRef.current?.click(); // input 클릭 트리거
-  };
+  return (
+    <UploadRow
+      testId="stock-excel-uploader"
+      label="재고 엑셀"
+      uploadedAt={uploadedAt}
+      isUploading={isUploading}
+      onFileSelected={(file) => void handleFileSelected(file)}
+    />
+  );
+};
 
+export default ExcelManager;
+
+// 모든 상품 데이터 삭제 버튼 (홈 업로드 묶음 아래쪽의 작은 회색 글자 버튼, 동작은 예전 그대로)
+export const DeleteAllDataButton = () => {
   const handleDeleteAllProducts = () => {
     if (confirm("정말 모든 상품 데이터를 삭제하시겠습니까?")) {
       alert("정상적으로 모든 상품 데이터를 삭제했습니다.");
@@ -49,39 +65,16 @@ const ExcelManager = () => {
   };
 
   return (
-    <div
-      data-testid="stock-excel-uploader"
-      className="p-4 bg-white rounded-xl shadow-sm border border-gray-200"
+    <button
+      type="button"
+      data-testid="delete-all-data"
+      onClick={handleDeleteAllProducts}
+      className="cursor-pointer text-xs text-gray-400 hover:text-gray-600 hover:underline"
     >
-      <h3 className="font-semibold mb-3">재고 엑셀</h3>
-      <div className="flex gap-2">
-        <input
-          type="file"
-          accept=".xlsx, .xls"
-          onChange={handleFileUpload}
-          ref={fileInputRef}
-          className="hidden"
-        />
-        <button
-          type="button"
-          onClick={handleFileInput}
-          disabled={isUploading}
-          className="flex-1 cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isUploading ? "업로드 중..." : "엑셀 파일 업로드"}
-        </button>
-        <div
-          className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
-          onClick={handleDeleteAllProducts}
-        >
-          데이터 삭제
-        </div>
-      </div>
-    </div>
+      데이터 삭제
+    </button>
   );
 };
-
-export default ExcelManager;
 
 // 엑셀 파일 하나를 검사하고, 요약을 보여 준 뒤 확인하면 /product를 통째로 바꾼다.
 // 어느 단계에서든 실패하거나 취소하면 DB에 쓰지 않는다.

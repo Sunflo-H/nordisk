@@ -299,6 +299,22 @@ async function readSalesDates(): Promise<Set<string>> {
   return new Set(Object.keys(snapshot.val() as Record<string, unknown>));
 }
 
+// 판매내역을 마지막으로 올린 날짜(/restock/salesDates의 uploadedAt 중 가장 늦은 날)를 읽는다 (읽기만).
+// 올린 적 없거나 형식이 맞는 값이 없으면 null. 홈 업로드 묶음의 "올린 날"에 쓴다.
+async function readLastSalesUploadedAt(): Promise<string | null> {
+  const snapshot = await get(child(dbRef, `${RESTOCK_PATH}/salesDates`));
+  const value: unknown = snapshot.val();
+  if (typeof value !== "object" || value === null) return null;
+  let latest: string | null = null;
+  for (const info of Object.values(value as Record<string, unknown>)) {
+    if (typeof info !== "object" || info === null) continue;
+    const uploadedAt = (info as Record<string, unknown>).uploadedAt;
+    if (typeof uploadedAt !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(uploadedAt)) continue;
+    if (latest === null || uploadedAt > latest) latest = uploadedAt;
+  }
+  return latest;
+}
+
 // 판매내역 업로드 계획을 쓰기 한 번(update)으로 저장한다 (전부 성공하거나 전부 실패).
 // 날짜·항목 단위 경로에 써서 이미 저장된 다른 날짜·항목은 건드리지 않는다.
 async function saveSalesUpload(plan: SalesUploadPlan): Promise<void> {
@@ -554,6 +570,7 @@ export {
   SalesDateConflictError,
   StaleRestockItemError,
   readSalesDates,
+  readLastSalesUploadedAt,
   saveSalesUpload,
   readRestockLists,
   readRestockIncoming,
