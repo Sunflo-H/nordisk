@@ -3,7 +3,6 @@ import {
   changeRestockItemStatus,
   deleteRestockItem,
   setRestockPresaleRegistered,
-  setRestockReturnChecked,
   StaleRestockItemError,
   type RestockLists,
   type RestockStatusChange,
@@ -16,7 +15,6 @@ import type {
   ProductType,
   RestockItem,
   RestockPresale,
-  RestockReturn,
 } from "../../types";
 import { getPhysicalStock, isIncomingActive } from "../../utils/physicalStock";
 import { computeArrival, type ArrivalResult } from "../../utils/restockArrival";
@@ -33,7 +31,6 @@ import {
 } from "../../utils/restockView";
 import PresaleList, { PresaleToggleButton } from "./PresaleList";
 import RestockItemTable from "./RestockItemTable";
-import ReturnCheckList from "./ReturnCheckList";
 import SalesDateList from "./SalesDateList";
 
 type RestockBoardProps = {
@@ -74,7 +71,7 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     () => groupByStatus(sortRestockEntries(lists.items)),
     [lists.items]
   );
-  // 판매일자별 보기: "챙길 것"·"챙김"만 고른 날짜로 좁힌다 (입고 알림·못 챙김·반품·선판매는 항상 모두).
+  // 판매일자별 보기: "챙길 것"·"챙김"만 고른 날짜로 좁힌다 (입고 알림·못 챙김·선판매는 항상 모두).
   // 처음과 판매일자 목록이 바뀐 뒤(새로 올림)에는 가장 최근 판매일자. 고른 값은 저장하지 않는다.
   const salesDatesKey = Object.keys(lists.salesDates).sort().join(",");
   const [pickedDate, setPickedDate] = useState<{
@@ -87,7 +84,6 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
       : getDefaultSalesDate(lists.salesDates);
   const pendingCounts = useMemo(() => countBySalesDate(itemGroups.pending), [itemGroups.pending]);
 
-  const returnEntries = useMemo(() => sortRestockEntries(lists.returns), [lists.returns]);
   // 선판매 목록: 등록 완료하지 않은 항목만 보여 준다
   const presaleEntries = useMemo(
     () => sortRestockEntries(lists.presales).filter(({ value }) => value.등록완료 !== true),
@@ -164,7 +160,7 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
     if (systemStock === null) return null;
     return showPhysical ? toPhysical(item, systemStock) : systemStock;
   };
-  const getProductName = (item: RestockItem | RestockReturn | RestockPresale): string =>
+  const getProductName = (item: RestockItem | RestockPresale): string =>
     item.상품명 || productMap.get(item.상품코드)?.상품명 || "-";
 
   // 같은 항목을 저장하는 동안 버튼을 막는다
@@ -247,28 +243,6 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
       setMessage(`${describe(item)} 항목을 챙길 목록에서 지웠습니다.`);
     });
   };
-
-  const handleToggleReturn = (id: string, checked: boolean) =>
-    runSaving(id, async () => {
-      try {
-        await setRestockReturnChecked(id, checked);
-      } catch (error) {
-        console.error(error);
-        alert("저장하지 못했습니다. 화면은 그대로입니다.");
-        return;
-      }
-      setLists((prev) =>
-        prev
-          ? {
-              ...prev,
-              returns: { ...prev.returns, [id]: { ...prev.returns[id], 확인함: checked } },
-            }
-          : prev
-      );
-      setMessage(
-        `반품 ${describe(lists.returns[id])} → ${checked ? "확인함" : "확인 안 함"} 저장했습니다.`
-      );
-    });
 
   const handleRegisterPresale = (id: string) =>
     runSaving(id, async () => {
@@ -373,13 +347,6 @@ const RestockBoard = ({ lists, setLists }: RestockBoardProps) => {
         selection={dateSelection}
         onSelect={(selection) => setPickedDate({ selection, salesDatesKey })}
         pendingCounts={pendingCounts}
-      />
-
-      <ReturnCheckList
-        entries={returnEntries}
-        getProductName={getProductName}
-        savingIds={savingIds}
-        onToggle={handleToggleReturn}
       />
 
       {restockStatusGroups.map(({ status, label }) => (

@@ -166,9 +166,8 @@ async function uploadSalesFile(file: File, storeSaleName: string): Promise<boole
   }
   const itemCount = Object.keys(plan.items).length;
   const presaleCount = Object.keys(plan.presales).length;
-  const returnCount = Object.keys(plan.returns).length;
   const lines = [
-    `저장했습니다. (판매일자 ${plan.summaries.length}일, 챙길 목록 ${itemCount}개, 선판매 ${presaleCount}개, 반품 확인 ${returnCount}개)`,
+    `저장했습니다. (판매일자 ${plan.summaries.length}일, 챙길 목록 ${itemCount}개, 선판매 ${presaleCount}개)`,
   ];
   if (plan.skippedDates.length > 0) {
     lines.push(`이미 저장되어 있어 건너뛴 판매일자: ${plan.skippedDates.join(", ")}`);
@@ -182,7 +181,7 @@ function formatPreview(fileName: string, plan: SalesUploadPlan, incomingApplied:
   const lines = [`"${fileName}" 판매내역을 저장합니다.`, ""];
   for (const summary of plan.summaries) {
     lines.push(
-      `· ${summary.판매일자}: 판매 ${summary.rowCount}줄 / 행사장 판매 ${summary.eventLineCount}줄 → 챙길 목록 ${summary.itemCount}개, 선판매 ${summary.presaleCount}개, 반품 확인 ${summary.returnCount}개`
+      `· ${summary.판매일자}: 판매 ${summary.rowCount}줄 / 행사장 판매 ${summary.eventLineCount}줄 → 챙길 목록 ${summary.itemCount}개, 선판매 ${summary.presaleCount}개`
     );
   }
   if (plan.skippedDates.length > 0) {

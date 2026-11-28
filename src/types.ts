@@ -131,18 +131,6 @@ export type RestockItem = {
   기준일?: string;
 };
 
-// /restock/returns/{id} (수량은 음수 그대로)
-export type RestockReturn = {
-  판매일자: string;
-  상품코드: string;
-  상품명: string;
-  칼라: string;
-  사이즈: SizeKey;
-  사이즈명: string;
-  수량: number;
-  확인함: boolean;
-};
-
 // /restock/presales/{id} 선판매 목록 (재고 음수 칸의 행사장 판매, id는 items와 같은 규칙)
 // 등록완료: "등록 완료"를 누르면 true. 지우지 않고 표시만 해 화면에서 숨긴다 (잘못 눌러도 되살릴 수 있게)
 export type RestockPresale = {

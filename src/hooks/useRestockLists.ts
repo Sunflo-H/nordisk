@@ -5,7 +5,7 @@ import {
 } from "../firebase/firebaseDatabase";
 
 type UseRestockListsResult = {
-  // 챙길 목록·반품 확인 목록·올린 판매일자 (아직 못 읽었으면 null)
+  // 챙길 목록·선판매 목록·올린 판매일자 (아직 못 읽었으면 null)
   lists: RestockLists | null;
   // 읽기 실패 시 오류 메시지
   errorMessage: string | null;
@@ -15,7 +15,7 @@ type UseRestockListsResult = {
   setLists: React.Dispatch<React.SetStateAction<RestockLists | null>>;
 };
 
-// /restock의 챙길 목록·반품 확인 목록·올린 판매일자를 읽는 훅
+// /restock의 챙길 목록·선판매 목록·올린 판매일자를 읽는 훅
 function useRestockLists(): UseRestockListsResult {
   const [lists, setLists] = useState<RestockLists | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
